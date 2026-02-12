@@ -5,13 +5,15 @@
   <title>Employee Record Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
   <style>
     body { background-color: #f0f4f8; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
     .container { max-width: 1200px; margin: 20px auto; width: 95%; }
     
     .section-box { 
       background: white; padding: 25px; border-radius: 10px; 
-      margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative;
+      margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
     }
     
     h5 { 
@@ -19,34 +21,40 @@
       padding-bottom: 10px; margin-top: 0; font-size: 1.3rem; 
     }
 
-    /* Full Screen Loader */
-    #loader {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.9); z-index: 9999;
-      display: none; flex-direction: column; justify-content: center; align-items: center;
-    }
-    .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #1565c0; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-    .loading-text { margin-top: 15px; font-weight: bold; color: #1565c0; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* Save Button at Bottom */
+    .save-btn-container { margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px; }
+    .save-btn { width: 100%; max-width: 250px; }
 
-    /* Sticky Auth Header */
+    /* Middle Copy Button */
+    .copy-icon-btn { 
+      cursor: pointer; color: #1565c0; background: #e3f2fd; 
+      border-radius: 50%; padding: 8px; transition: 0.3s; 
+    }
+    .copy-icon-btn:hover { background: #bbdefb; transform: scale(1.1); }
+    .middle-col { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+    /* Orange Warning for Marks */
+    .input-warning { border-bottom: 2px solid #ff9800 !important; box-shadow: 0 1px 0 0 #ff9800 !important; }
+    .warning-msg { color: #ff9800; font-size: 0.8rem; display: none; font-weight: bold; }
+
+    /* Loader */
+    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #1565c0; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+    
     .sticky-header { position: sticky; top: 0; z-index: 100; background: #f0f4f8; padding: 10px 0; }
-    
-    .save-btn { position: absolute; top: 20px; right: 25px; }
-    
     .percent-badge { font-size: 0.8rem; background: #2e7d32; color: white; padding: 2px 6px; border-radius: 4px; display: none; margin-left: 5px; }
-    .disabled-field { background-color: #f9f9f9 !important; pointer-events: none; color: #aaa !important; }
     .u-case { text-transform: uppercase; }
 
+    /* Mobile adjustments */
     @media (max-width: 600px) {
-      .save-btn { position: static; display: block; width: 100%; margin-bottom: 15px; }
-      h5 { text-align: center; }
+       .middle-col { margin: 10px 0; transform: rotate(90deg); /* Rotate arrow down on mobile */ }
+       .save-btn { width: 100%; max-width: none; }
     }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="spinner"></div><div class="loading-text">Processing...</div></div>
+  <div id="loader"><div class="spinner"></div><div class="loading-text" style="margin-top:15px; color:#1565c0; font-weight:bold;">Processing...</div></div>
 
   <div class="container">
     
@@ -69,28 +77,34 @@
     </div>
 
     <form id="mainForm">
+      
       <div class="section-box" id="sec1">
         <h5>1. Personal Details</h5>
-        <button type="button" class="btn green darken-1 save-btn" onclick="saveData('sec1')">SAVE SECTION 1</button>
         <div class="row">
           <div class="input-field col s12 m4"><input type="text" name="Full Name" class="u-case"><label>Full Name</label></div>
           <div class="input-field col s12 m4"><input type="text" name="Designation" class="u-case"><label>Designation</label></div>
           <div class="input-field col s12 m4"><input type="text" name="D.O.B." class="date-mask"><label>DOB (View Only)</label></div>
         </div>
         <div class="row">
-           <div class="input-field col s12 m4"><input type="text" name="Aadhaar Number" class="num-only" maxlength="12"><label>Aadhaar</label></div>
-           <div class="input-field col s12 m4"><input type="text" name="PAN Number" class="u-case" maxlength="10"><label>PAN</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="IP-Number"><label>IP-Number</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="GPF / PRAN No"><label>GPF / PRAN No</label></div>
            <div class="input-field col s12 m4"><input type="text" name="Social Category" class="u-case"><label>Category</label></div>
         </div>
         <div class="row">
-           <div class="input-field col s12 m6"><input type="text" name="Blood Group" class="u-case"><label>Blood Group</label></div>
-           <div class="input-field col s12 m6"><input type="text" name="Identification Mark" class="u-case"><label>ID Mark</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="Aadhaar Number" class="num-only" maxlength="12"><label>Aadhaar</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="PAN Number" class="u-case" maxlength="10"><label>PAN</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="Blood Group" class="u-case"><label>Blood Group</label></div>
+        </div>
+        <div class="row"><div class="input-field col s12"><input type="text" name="Identification Mark" class="u-case"><label>ID Mark</label></div></div>
+        
+        <div class="save-btn-container">
+          <button type="button" class="btn green darken-1 save-btn waves-effect" onclick="saveData('sec1')">SAVE SECTION 1</button>
         </div>
       </div>
 
       <div class="section-box" id="sec2">
         <h5>2. Family & Contact</h5>
-        <button type="button" class="btn green darken-1 save-btn" onclick="saveData('sec2')">SAVE SECTION 2</button>
+        
         <div class="row">
            <div class="input-field col s12 m6"><input type="text" name="Father's Name" class="u-case"><label>Father's Name</label></div>
            <div class="input-field col s12 m6"><input type="text" name="Father's Contact No." class="phone-check"><label>Phone</label></div>
@@ -100,41 +114,86 @@
            <div class="input-field col s12 m6"><input type="text" name="Mother's Contact No." class="phone-check"><label>Phone</label></div>
         </div>
         <div class="row">
-           <div class="input-field col s12 m4"><input type="text" id="p_cell" name="Personal Contact No." class="phone-check"><label>Personal Phone</label></div>
-           <div class="input-field col s12 m4"><input type="text" id="w_cell" name="WhatsApp No." class="phone-check"><label>WhatsApp</label></div>
-           <div class="col s12 m4"><button type="button" class="btn-small grey lighten-1 black-text" style="width:100%; margin-top:20px;" onclick="copyPhone()">Copy to WhatsApp</button></div>
+           <div class="input-field col s12 m4"><input type="text" name="Name of Spouse" class="u-case"><label>Spouse Name</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="Contact No. of Spouse" class="phone-check"><label>Spouse Phone</label></div>
+           <div class="input-field col s12 m4"><input type="text" name="Email ID"><label>Email ID</label></div>
         </div>
-        <div class="row"><div class="input-field col s12"><input type="text" name="Email ID"><label>Email ID</label></div></div>
-        <div class="row">
-           <div class="input-field col s12 m6"><textarea name="Permanent Address" class="materialize-textarea u-case"></textarea><label>Permanent Address</label></div>
-           <div class="input-field col s12 m6"><textarea name="Present Address" class="materialize-textarea u-case"></textarea><label>Present Address</label></div>
+
+        <div class="row valign-wrapper" style="flex-wrap: wrap;">
+           <div class="input-field col s12 m5"><input type="text" id="p_cell" name="Personal Contact No." class="phone-check"><label>Personal Phone</label></div>
+           
+           <div class="col s12 m2 middle-col">
+             <i class="material-icons copy-icon-btn" onclick="copyField('p_cell', 'w_cell')" title="Copy to WhatsApp">arrow_forward</i>
+           </div>
+           
+           <div class="input-field col s12 m5"><input type="text" id="w_cell" name="WhatsApp No." class="phone-check"><label>WhatsApp</label></div>
+        </div>
+
+        <div class="row valign-wrapper" style="flex-wrap: wrap;">
+           <div class="input-field col s12 m5"><textarea id="perm_addr" name="Permanent Address" class="materialize-textarea u-case"></textarea><label>Permanent Address</label></div>
+           
+           <div class="col s12 m2 middle-col">
+             <i class="material-icons copy-icon-btn" onclick="copyField('perm_addr', 'pres_addr')" title="Copy to Present">arrow_forward</i>
+           </div>
+
+           <div class="input-field col s12 m5"><textarea id="pres_addr" name="Present Address" class="materialize-textarea u-case"></textarea><label>Present Address</label></div>
+        </div>
+
+        <div class="save-btn-container">
+          <button type="button" class="btn green darken-1 save-btn waves-effect" onclick="saveData('sec2')">SAVE SECTION 2</button>
         </div>
       </div>
 
       <div class="section-box" id="sec3">
         <h5>3. Bank Details</h5>
-        <button type="button" class="btn green darken-1 save-btn" onclick="saveData('sec3')">SAVE SECTION 3</button>
         <div class="row">
           <div class="input-field col s12 m4"><input type="text" name="Salary Account Number" class="num-only"><label>Account No.</label></div>
           <div class="input-field col s12 m4"><input type="text" name="IFSC Number" class="u-case"><label>IFSC</label></div>
           <div class="input-field col s12 m4"><input type="text" name="Bank Name and Branch" class="u-case"><label>Bank Name</label></div>
         </div>
+        <div class="save-btn-container">
+          <button type="button" class="btn green darken-1 save-btn waves-effect" onclick="saveData('sec3')">SAVE SECTION 3</button>
+        </div>
       </div>
 
       <div class="section-box" id="sec4">
         <h5>4. Academic Details</h5>
-        <button type="button" class="btn green darken-1 save-btn" onclick="saveData('sec4')">SAVE SECTION 4</button>
-        <div class="row grey lighten-5 p-2" style="padding:10px;">
+        
+        <div class="row grey lighten-5 p-2" style="padding:10px; margin-bottom:10px;">
            <div class="input-field col s12 m4"><input type="text" name="Matric Board" class="u-case"><label>Matric Board</label></div>
            <div class="input-field col s6 m4"><input type="text" name="Matriculation Passing Date"><label>Year</label></div>
-           <div class="input-field col s6 m4"><input type="text" name="Matriculation (Marks Obtained/Total Marks)" class="marks-mask" placeholder="Obt/Total"><label>Marks <span class="percent-badge"></span></label></div>
+           <div class="input-field col s6 m4">
+             <input type="text" name="Matriculation (Marks Obtained/Total Marks)" class="marks-mask" placeholder="Obt/Total">
+             <label>Marks <span class="percent-badge"></span></label>
+             <span class="warning-msg">⚠️ Update Format: Obtained/Total</span>
+           </div>
         </div>
-        <div class="row grey lighten-5 p-2" style="padding:10px;">
-           <div class="input-field col s12 m4"><input type="text" name="10+2 Board" class="u-case"><label>10+2 Board</label></div>
-           <div class="input-field col s6 m4"><input type="text" name="10+2 Passing Date"><label>Year</label></div>
-           <div class="input-field col s6 m4"><input type="text" name="10+2 (Marks Obtained/Total Marks)" class="marks-mask" placeholder="Obt/Total"><label>Marks <span class="percent-badge"></span></label></div>
+        <div class="row grey lighten-5 p-2" style="padding:10px; margin-bottom:10px;">
+           <div class="input-field col s12 m3"><input type="text" name="10+2 Board" class="u-case"><label>10+2 Board</label></div>
+           <div class="input-field col s12 m3"><input type="text" name="10+2 Stream" class="u-case"><label>Stream</label></div>
+           <div class="input-field col s6 m2"><input type="text" name="10+2 Passing Date"><label>Year</label></div>
+           <div class="input-field col s6 m4">
+             <input type="text" name="10+2 (Marks Obtained/Total Marks)" class="marks-mask" placeholder="Obt/Total">
+             <label>Marks <span class="percent-badge"></span></label>
+             <span class="warning-msg">⚠️ Update Format: Obtained/Total</span>
+           </div>
         </div>
+        
+        <div class="row grey lighten-5 p-2" style="padding:10px; margin-bottom:10px;">
+           <div class="input-field col s12 m3"><input type="text" name="Graduation Stream" class="u-case"><label>Grad Stream</label></div>
+           <div class="input-field col s12 m3"><input type="text" name="Graduation – Main Subject(s)" class="u-case"><label>Subjects</label></div>
+           <div class="input-field col s6 m2"><input type="text" name="Graduation Completion Date"><label>Year</label></div>
+           <div class="input-field col s6 m4">
+             <input type="text" name="Graduation (Marks Obtained/Total Marks)" class="marks-mask" placeholder="Obt/Total">
+             <label>Marks <span class="percent-badge"></span></label>
+             <span class="warning-msg">⚠️ Update Format: Obtained/Total</span>
+           </div>
         </div>
+
+        <div class="save-btn-container">
+          <button type="button" class="btn green darken-1 save-btn waves-effect" onclick="saveData('sec4')">SAVE SECTION 4</button>
+        </div>
+      </div>
       
       </form>
   </div>
@@ -142,23 +201,66 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
     // ***********************************************
-    // PASTE YOUR GOOGLE WEB APP URL HERE
+    // PASTE YOUR GOOGLE WEB APP URL HERE (Ending in /exec)
     // ***********************************************
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxK_psMDs2EAjfFU-M-IFcAq-eUO1rYaSHOWxU5bRtUy8YVJ5Rle-t7v3spUak8eJA/exec'; 
     // ***********************************************
 
     document.addEventListener('DOMContentLoaded', function() { M.AutoInit(); });
 
-    // --- UI HELPERS ---
+    // UI Helpers
     const showLoader = (txt) => { document.querySelector('.loading-text').textContent = txt; document.getElementById('loader').style.display = 'flex'; };
     const hideLoader = () => { document.getElementById('loader').style.display = 'none'; };
 
-    // Input Logic
+    // GENERIC COPY FUNCTION
+    function copyField(sourceId, targetId) {
+      const src = document.getElementById(sourceId);
+      const tgt = document.getElementById(targetId);
+      if(src && tgt) {
+        tgt.value = src.value;
+        M.updateTextFields(); // Refresh label position
+        M.toast({html: 'Copied Successfully'});
+      }
+    }
+
+    // MARKS VALIDATION & MASK
+    document.querySelectorAll('.marks-mask').forEach(el => {
+      // Input event: mask typing
+      el.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9\/]/g, '');
+        validateMarks(this); // Check warning immediately
+      });
+    });
+
+    function validateMarks(el) {
+       const badge = el.parentNode.querySelector('.percent-badge');
+       const warning = el.parentNode.querySelector('.warning-msg');
+       const parts = el.value.split('/');
+
+       // 1. Check Format Mismatch (Orange Warning)
+       if(el.value && !el.value.includes('/')) {
+         el.classList.add('input-warning');
+         warning.style.display = 'block';
+         badge.style.display = 'none';
+       } else {
+         el.classList.remove('input-warning');
+         warning.style.display = 'none';
+         
+         // 2. Check Valid Calculation
+         if(parts.length === 2 && parts[0] && parts[1] && parseFloat(parts[1]) > 0) {
+            badge.textContent = ((parseFloat(parts[0]) / parseFloat(parts[1])) * 100).toFixed(2) + '%';
+            badge.style.display = 'inline-block';
+         } else { 
+            badge.style.display = 'none'; 
+         }
+       }
+    }
+
+    // Input Filters
     document.querySelectorAll('.u-case').forEach(el => el.addEventListener('input', () => el.value = el.value.toUpperCase()));
     document.querySelectorAll('.num-only').forEach(el => el.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); }));
     document.querySelectorAll('.phone-check').forEach(el => el.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10); }));
     
-    // Date Mask
     document.querySelectorAll('.date-mask').forEach(el => {
       el.addEventListener('input', function(e) {
         if(e.inputType === 'deleteContentBackward') return;
@@ -168,66 +270,35 @@
       });
     });
 
-    // Marks Mask
-    document.querySelectorAll('.marks-mask').forEach(el => {
-      el.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9\/]/g, '');
-        const parts = this.value.split('/');
-        const badge = this.parentNode.querySelector('.percent-badge');
-        if(parts.length === 2 && parts[0] && parts[1] && parseFloat(parts[1]) > 0) {
-           badge.textContent = ((parseFloat(parts[0]) / parseFloat(parts[1])) * 100).toFixed(2) + '%';
-           badge.style.display = 'inline-block';
-        } else { badge.style.display = 'none'; }
-      });
-    });
-
-    function copyPhone() {
-      document.getElementById('w_cell').value = document.getElementById('p_cell').value;
-      M.updateTextFields();
-    }
-
-    // --- CORE API CALLS ---
-
+    // --- CORE LOGIC ---
     function handleLogin() {
       const pmis = document.getElementById('auth_pmis').value;
       const dob = document.getElementById('auth_dob').value;
-      
       if(!pmis || !dob) return M.toast({html: 'Enter PMIS & DOB'});
 
       showLoader('Authenticating...');
 
-      // GET Request to Google Script
       fetch(`${SCRIPT_URL}?action=search&pmis=${encodeURIComponent(pmis)}&dob=${encodeURIComponent(dob)}`)
         .then(response => response.json())
         .then(data => {
           hideLoader();
-          if (data.error) {
-             alert(data.error); 
-             return;
-          }
+          if (data.error) { alert(data.error); return; }
           if (data.notFound) {
-             if(confirm("New Record Mode?")) {
-               document.getElementById('mainForm').reset();
-               M.updateTextFields();
-             }
+             if(confirm("New Record Mode?")) { document.getElementById('mainForm').reset(); M.updateTextFields(); }
              return;
           }
           
-          // Populate Data
           Object.keys(data).forEach(key => {
             let field = document.getElementsByName(key)[0];
             if(field) {
               field.value = data[key];
-              field.dispatchEvent(new Event('input')); // Trigger masks
+              field.dispatchEvent(new Event('input')); // Triggers masks AND validation
             }
           });
           M.updateTextFields();
           M.toast({html: 'Loaded Successfully'});
         })
-        .catch(err => {
-          hideLoader();
-          alert("Connection Error: " + err);
-        });
+        .catch(err => { hideLoader(); alert("Connection Error: " + err); });
     }
 
     function saveData(sectionId) {
@@ -235,16 +306,12 @@
       if(!pmis) return alert("Please Authenticate First");
 
       showLoader('Saving...');
-
       const section = document.getElementById(sectionId);
       const inputs = section.querySelectorAll('input, textarea, select');
       const payload = { 'PMIS Code': pmis };
 
-      inputs.forEach(el => {
-         payload[el.name] = el.value;
-      });
+      inputs.forEach(el => { payload[el.name] = el.value; });
 
-      // POST Request (using text/plain to avoid CORS preflight issues in GAS)
       fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ action: 'save', payload: payload })
@@ -255,10 +322,7 @@
         if(data.error) alert(data.error);
         else M.toast({html: data.message});
       })
-      .catch(err => {
-        hideLoader();
-        alert("Save Failed: " + err);
-      });
+      .catch(err => { hideLoader(); alert("Save Failed: " + err); });
     }
   </script>
 </body>
