@@ -2,291 +2,296 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title id="pageTitle">SaaS PMIS Portal</title>
+  <title id="pageTitle">SaaS PMIS Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
   <style>
-    body { background-color: #f4f7f9; font-family: 'Segoe UI', sans-serif; }
-    .container { width: 98%; max-width: 1400px; margin-top: 20px; }
-    .section-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #1565c0; }
-    .header-panel { background: #1565c0; color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    :root { --primary: #1565c0; --accent: #ff9800; --bg: #f8fafc; --text: #1e293b; }
+    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); padding-bottom: 50px; }
     
-    /* Atomic Save Button */
-    .field-wrapper { position: relative; }
-    .atomic-btn { 
-      position: absolute; right: 5px; top: 15px; 
-      display: none; cursor: pointer; color: #1565c0; z-index: 10;
-      background: white; border-radius: 50%;
-    }
-    .atomic-btn:hover { transform: scale(1.2); color: #2e7d32; }
-    
-    /* Status Badges */
-    .percent-badge { position: absolute; right: 35px; top: 18px; background: #2e7d32; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; display: none; }
-    
-    /* Loader */
-    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1565c0; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    /* Cinematic Verbose Loader */
+    #loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .pulse-ring { width: 80px; height: 80px; border: 4px solid #f1f5f9; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55); }
     @keyframes spin { 100% { transform: rotate(360deg); } }
+    #verboseText { margin-top: 25px; font-weight: 600; font-size: 1.1rem; color: var(--primary); height: 1.5rem; text-align: center; }
 
-    /* Admin Panel Styling */
-    .admin-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.9rem; }
+    /* Atomic Save Button (Slide-in) */
+    .field-wrapper { position: relative; margin-bottom: 5px; }
+    .atomic-save { 
+      position: absolute; right: 10px; top: 12px; opacity: 0; 
+      transform: translateX(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer; color: var(--primary); background: white; z-index: 5; padding: 2px;
+    }
+    .atomic-save.show { opacity: 1; transform: translateX(0); }
+    
+    /* Pro UI Layout */
+    .section-card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+    .section-header { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-bottom: 25px; display: flex; align-items: center; letter-spacing: -0.5px; }
+    .section-header i { margin-right: 10px; font-size: 1.5rem; }
+    
+    .brand-header { background: var(--primary); color: white; padding: 30px; border-radius: 20px; margin-top: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* Marks & Badges */
+    .percent-badge { position: absolute; right: 45px; top: 18px; background: #2e7d32; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: none; }
+    
     .u-case { text-transform: uppercase; }
+    .admin-row { border-bottom: 1px solid #f1f5f9; padding: 15px 0; }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="spinner"></div><p id="loaderText" style="margin-top:10px; font-weight:bold;">Initializing Mother Ship...</p></div>
+  <div id="loader">
+    <div class="pulse-ring"></div>
+    <p id="verboseText">Initiating Mother Ship Handshake...</p>
+  </div>
 
-  <div id="adminModal" class="modal modal-fixed-footer" style="width: 90%; max-height: 90%;">
+  <div id="adminModal" class="modal modal-fixed-footer" style="width: 90%; max-height: 85%;">
     <div class="modal-content">
-      <h4><i class="material-icons left">settings</i> Schema Orchestrator</h4>
-      <p>Manage your Database Columns and Sections here.</p>
-      <div id="schemaList">
+      <h4><i class="material-icons left">tune</i> Database Orchestrator</h4>
+      <p>Configure section mapping and field order precisely.</p>
+      <div id="orchestratorList">
         </div>
-      <hr>
-      <h5>Add New Column</h5>
-      <div class="row">
-        <div class="input-field col s12 m4"><input type="text" id="new_col_label"><label>Column Label</label></div>
-        <div class="input-field col s12 m4">
-          <select id="new_col_section">
-            <option value="Personal">Personal</option>
-            <option value="Contact & Family">Contact & Family</option>
-            <option value="Academic">Academic</option>
-            <option value="Professional">Professional</option>
-            <option value="Service History">Service History</option>
-          </select>
-          <label>Section</label>
-        </div>
-        <div class="col s12 m4"><button class="btn blue" style="margin-top:20px;" onclick="addNewField()">Add Field</button></div>
-      </div>
     </div>
     <div class="modal-footer">
-      <button class="modal-close btn-flat">Close</button>
+      <button class="btn blue darken-2" onclick="applySchemaUpdate()">Apply Structural Changes</button>
+      <button class="modal-close btn-flat">Cancel</button>
     </div>
   </div>
 
   <div id="setupModal" class="modal">
     <div class="modal-content">
-      <h4>System Setup</h4>
+      <h4>Portal Setup</h4>
       <div id="idStep">
-        <div class="input-field"><input type="text" id="sheet_id_input"><label>Google Sheet ID</label></div>
-        <button class="btn blue" onclick="saveSheetId()">Connect</button>
+        <p>Enter the Google Sheet ID of your blank sheet.</p>
+        <div class="input-field"><input type="text" id="setup_sid"><label>Sheet ID</label></div>
+        <button class="btn-large blue w100" style="width:100%" onclick="saveSid()">Connect Database</button>
       </div>
       <div id="provisionStep" style="display:none;">
-        <div class="input-field"><input type="text" id="org_name_input"><label>Organization Name</label></div>
-        <div class="input-field"><input type="password" id="admin_pass_input"><label>Set Admin Password</label></div>
-        <button class="btn green" onclick="runProvisioning()">Build Database</button>
+        <p>Sheet connected. Let's build your organization's DNA.</p>
+        <div class="input-field"><input type="text" id="setup_org"><label>Organization Name</label></div>
+        <div class="input-field"><input type="password" id="setup_pass"><label>Set Admin Password</label></div>
+        <button class="btn-large green w100" style="width:100%" onclick="startProvisioning()">Build System Now</button>
       </div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="header-panel" id="brandHeader" style="display:none;">
+  <div class="container" id="appBody" style="display:none;">
+    <div class="brand-header">
       <div>
-        <h4 id="orgDisplay" style="margin:0; font-weight:bold;">Portal</h4>
-        <span id="sheetDisplay" style="font-size:0.7rem; opacity:0.7;"></span>
+        <h3 id="orgDisplay" style="margin:0; font-weight:900;">...</h3>
+        <span id="portalSub" style="opacity:0.8; font-weight:300;">Enterprise PMIS Engine</span>
       </div>
-      <i class="material-icons" style="cursor:pointer;" onclick="openAdmin()">settings</i>
+      <i class="material-icons" style="cursor:pointer; font-size:2rem;" onclick="verifyAdminAccess()">settings</i>
     </div>
 
-    <div id="authZone" class="section-box" style="display:none;">
+    <div class="section-card" style="border-left: 8px solid var(--primary);">
       <div class="row" style="margin-bottom:0">
-        <div class="input-field col s12 m5"><input type="text" id="pmis_input"><label>PMIS CODE</label></div>
-        <div class="input-field col s12 m5"><input type="text" id="dob_input" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
-        <div class="col s12 m2"><button class="btn-large blue darken-4 w100" style="width:100%;" onclick="loadRecord()">LOAD</button></div>
+        <div class="input-field col s12 m5"><input type="text" id="auth_pmis"><label>PMIS CODE</label></div>
+        <div class="input-field col s12 m5"><input type="text" id="auth_dob" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
+        <div class="col s12 m2"><button class="btn-large black waves-effect" style="width:100%; height:54px;" onclick="loadEmployeeData()">LOAD</button></div>
       </div>
     </div>
 
-    <form id="mainForm"></form>
+    <div id="dynamicFormBody"></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
     const MOTHER_SHIP = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
-    let CURRENT_ID = localStorage.getItem('pmis_sheet_id');
-    let SCHEMA_CACHE = [];
+    let SID = localStorage.getItem('pmis_active_sid');
+    let SCHEMA_STATE = [];
 
-    document.addEventListener('DOMContentLoaded', () => {
+    window.onload = () => {
       M.Modal.init(document.querySelectorAll('.modal'), {dismissible: false});
-      M.FormSelect.init(document.querySelectorAll('select'));
-      if(!CURRENT_ID) { openSetup(); } else { initSystem(); }
-    });
+      if(!SID) { runVerboseSequence(["Welcome to SaaS PMIS", "Ready for Connection"], () => openSetup()); } 
+      else { runInit(); }
+    };
 
-    function openSetup() {
-      toggleLoader(false);
-      M.Modal.getInstance(document.getElementById('setupModal')).open();
-    }
-
-    function saveSheetId() {
-      CURRENT_ID = document.getElementById('sheet_id_input').value.trim();
-      localStorage.setItem('pmis_sheet_id', CURRENT_ID);
-      initSystem();
-    }
-
-    function initSystem() {
-      toggleLoader(true, "Connecting...");
-      callAPI({action: 'init', sheetId: CURRENT_ID}, (res) => {
-        if(res.needsProvisioning) {
-          document.getElementById('idStep').style.display = 'none';
-          document.getElementById('provisionStep').style.display = 'block';
-          openSetup();
-        } else {
-          M.Modal.getInstance(document.getElementById('setupModal')).close();
-          SCHEMA_CACHE = res.schema;
-          document.getElementById('orgDisplay').innerText = res.settings.ORG_NAME;
-          document.getElementById('brandHeader').style.display = 'flex';
-          document.getElementById('authZone').style.display = 'block';
-          renderForm(res.schema);
-        }
-        toggleLoader(false);
+    function runInit() {
+      runVerboseSequence(["Connecting to Mother Ship...", "Scanning Sheet DNA...", "Mapping UI Components..."], () => {
+        callMotherShip({action: 'init', sheetId: SID}, (res) => {
+          if(res.needsProvisioning) { openSetup(true); } 
+          else {
+            SCHEMA_STATE = res.schema;
+            document.getElementById('orgDisplay').innerText = res.settings.ORG_NAME;
+            renderDynamicUI(res.schema);
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('appBody').style.display = 'block';
+          }
+        });
       });
     }
 
-    function renderForm(schema) {
-      const form = document.getElementById('mainForm');
-      form.innerHTML = '';
-      const sections = [...new Set(schema.map(f => f.Section))];
+    function renderDynamicUI(schema) {
+      const container = document.getElementById('dynamicFormBody');
+      container.innerHTML = '';
+      const sections = [...new Set(schema.map(f => f.Section))].sort();
       
-      sections.forEach(sec => {
-        const box = document.createElement('div');
-        box.className = 'section-box';
-        box.innerHTML = `<h5>${sec}</h5><div class="row"></div>`;
-        const row = box.querySelector('.row');
+      sections.forEach(secName => {
+        const card = document.createElement('div');
+        card.className = 'section-card';
+        card.innerHTML = `<div class="section-header"><i class="material-icons">folder_open</i> ${secName}</div><div class="row" id="sec_${secName.replace(/\s/g,'')}"></div>`;
+        container.appendChild(card);
         
-        schema.filter(f => f.Section === sec).forEach(f => {
+        const row = card.querySelector('.row');
+        schema.filter(f => f.Section === secName).sort((a,b) => a.Order - b.Order).forEach(f => {
           const wrapper = document.createElement('div');
           wrapper.className = 'input-field col s12 m4 field-wrapper';
           wrapper.innerHTML = `
-            <input type="text" name="${f.Label}" class="u-case field-input">
+            <input type="text" name="${f.ID}" class="u-case f-input" data-label="${f.Label}">
             <label>${f.Label}</label>
-            ${f.Data_Type === 'MARKS' ? '<span class="percent-badge"></span>' : ''}
-            <i class="material-icons atomic-btn" onclick="saveField(this)">save</i>
+            ${f.Type === 'MARKS' ? '<span class="percent-badge"></span>' : ''}
+            <i class="material-icons atomic-save" onclick="triggerAtomicSave(this)">save</i>
           `;
           row.appendChild(wrapper);
         });
-        form.appendChild(box);
       });
       M.updateTextFields();
-      attachInputListeners();
+      attachBehaviors();
     }
 
-    function attachInputListeners() {
-      document.querySelectorAll('.field-input').forEach(input => {
-        input.addEventListener('input', (e) => {
-          const btn = e.target.parentElement.querySelector('.atomic-btn');
-          btn.style.display = 'block';
+    function attachBehaviors() {
+      document.querySelectorAll('.f-input').forEach(input => {
+        input.oninput = (e) => {
+          const btn = e.target.parentElement.querySelector('.atomic-save');
+          btn.classList.add('show');
           btn.innerHTML = 'save';
           btn.style.color = '#1565c0';
           
           if(e.target.name.includes('Marks')) {
             const badge = e.target.parentElement.querySelector('.percent-badge');
             const p = e.target.value.split('/');
-            if(p.length === 2 && p[1]>0) {
-              badge.innerText = ((p[0]/p[1])*100).toFixed(1)+'%';
+            if(p.length === 2 && p[1] > 0) {
+              badge.innerText = ((p[0]/p[1])*100).toFixed(1) + '%';
               badge.style.display = 'block';
             }
           }
-        });
+        };
       });
     }
 
-    function saveField(btn) {
+    function triggerAtomicSave(btn) {
       const input = btn.parentElement.querySelector('input');
-      const pmis = document.getElementById('pmis_input').value;
-      if(!pmis) return alert("Load a record first!");
+      const pmis = document.getElementById('auth_pmis').value;
+      if(!pmis) return M.toast({html: 'Load record first!'});
 
       btn.innerHTML = 'sync';
       btn.style.opacity = '0.5';
 
-      callAPI({
-        action: 'atomicSave',
-        sheetId: CURRENT_ID,
-        pmis: pmis,
-        fieldName: input.name,
-        newValue: input.value.toUpperCase()
+      callMotherShip({
+        action: 'atomicSave', sheetId: SID, pmis: pmis,
+        fieldName: input.name, newValue: input.value.toUpperCase()
       }, (res) => {
         if(res.success) {
           btn.innerHTML = 'check_circle';
           btn.style.color = '#2e7d32';
           btn.style.opacity = '1';
-          setTimeout(() => { btn.style.display = 'none'; }, 2000);
+          setTimeout(() => btn.classList.remove('show'), 2000);
         }
       });
     }
 
-    function loadRecord() {
-      const pmis = document.getElementById('pmis_input').value;
-      const dob = document.getElementById('dob_input').value;
-      toggleLoader(true, "Searching...");
-      callAPI({action: 'search', sheetId: CURRENT_ID, pmis: pmis, dob: dob}, (res) => {
-        toggleLoader(false);
-        if(res.error) return alert(res.error);
-        if(res.notFound) return M.toast({html: 'No record found'});
-        
-        Object.keys(res).forEach(key => {
-          const el = document.getElementsByName(key)[0];
-          if(el) { el.value = res[key]; el.dispatchEvent(new Event('input')); }
-        });
-        document.querySelectorAll('.atomic-btn').forEach(b => b.style.display = 'none');
-        M.updateTextFields();
-      });
-    }
-
-    // --- ADMIN ORCHESTRATOR ---
-    function openAdmin() {
-      const pass = prompt("Enter Admin Password:");
-      callAPI({action: 'init', sheetId: CURRENT_ID}, (res) => {
+    // --- ORCHESTRATOR LOGIC ---
+    function verifyAdminAccess() {
+      const pass = prompt("Enter Administrator Password:");
+      callMotherShip({action: 'init', sheetId: SID}, (res) => {
         if(String(pass) === String(res.settings.ADMIN_PASSWORD)) {
-          renderSchemaEditor(res.schema);
-          M.Modal.getInstance(document.getElementById('adminModal')).open();
-        } else { alert("Unauthorized"); }
+          openOrchestrator(res.schema);
+        } else { alert("Access Denied."); }
       });
     }
 
-    function renderSchemaEditor(schema) {
-      const list = document.getElementById('schemaList');
-      list.innerHTML = '<div class="row blue-text" style="font-weight:bold;"><div class="col s6">Field Label</div><div class="col s6">Current Section</div></div>';
+    function openOrchestrator(schema) {
+      const list = document.getElementById('orchestratorList');
+      const sections = [...new Set(schema.map(f => f.Section))];
+      list.innerHTML = `<div class="row grey-text" style="font-weight:bold;"><div class="col s5">Field Label</div><div class="col s4">Section Dropdown</div><div class="col s3">Order</div></div>`;
+      
       schema.forEach(f => {
-        const div = document.createElement('div');
-        div.className = 'admin-row row';
-        div.innerHTML = `<div class="col s6">${f.Label}</div><div class="col s6 grey-text text-darken-2">${f.Section}</div>`;
-        list.appendChild(div);
+        const row = document.createElement('div');
+        row.className = 'admin-row row';
+        row.innerHTML = `
+          <div class="col s5" style="padding-top:10px;">${f.Label}</div>
+          <div class="col s4">
+            <select class="browser-default orchestrate-sec" data-id="${f.ID}">
+              ${sections.map(s => `<option value="${s}" ${f.Section === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col s3"><input type="number" class="orchestrate-ord" value="${f.Order}" data-id="${f.ID}"></div>
+        `;
+        list.appendChild(row);
       });
+      M.Modal.getInstance(document.getElementById('adminModal')).open();
     }
 
-    function addNewField() {
-      const label = document.getElementById('new_col_label').value;
-      const section = document.getElementById('new_col_section').value;
-      if(!label) return alert("Enter a label");
-
-      toggleLoader(true, "Modifying Database...");
-      callAPI({
-        action: 'manageSchema',
-        subAction: 'addColumn',
-        sheetId: CURRENT_ID,
-        payload: { label: label, section: section, type: 'TEXT_UC', order: 999 }
-      }, (res) => {
-        if(res.success) location.reload();
+    function applySchemaUpdate() {
+      const payload = Array.from(document.querySelectorAll('.orchestrate-sec')).map(sel => {
+        const id = sel.dataset.id;
+        const ordInput = document.querySelector(`.orchestrate-ord[data-id="${id}"]`);
+        return { ID: id, Section: sel.value, Order: parseInt(ordInput.value) };
       });
+
+      document.getElementById('loader').style.display = 'flex';
+      callMotherShip({action: 'updateSchema', sheetId: SID, payload: payload}, () => location.reload());
     }
 
     // --- UTILS ---
-    function callAPI(data, cb) {
+    function runVerboseSequence(msgs, onComplete) {
+      let i = 0;
+      const display = document.getElementById('verboseText');
+      const interval = setInterval(() => {
+        display.innerText = msgs[i];
+        i++;
+        if(i >= msgs.length) { clearInterval(interval); onComplete(); }
+      }, 1200);
+    }
+
+    function callMotherShip(data, cb) {
       fetch(MOTHER_SHIP, { method: 'POST', body: JSON.stringify(data) })
-        .then(res => res.json()).then(res => cb(res))
-        .catch(e => { toggleLoader(false); alert("Mother Ship Error: " + e); });
+        .then(res => res.json()).then(cb).catch(e => alert("Signal Lost: " + e));
     }
 
-    function toggleLoader(s, t) {
-      document.getElementById('loader').style.display = s ? 'flex' : 'none';
-      if(t) document.getElementById('loaderText').innerText = t;
+    function openSetup(provisionMode = false) {
+      document.getElementById('loader').style.display = 'none';
+      if(provisionMode) {
+        document.getElementById('idStep').style.display = 'none';
+        document.getElementById('provisionStep').style.display = 'block';
+      }
+      M.Modal.getInstance(document.getElementById('setupModal')).open();
     }
 
-    function runProvisioning() {
-      const org = document.getElementById('org_name_input').value;
-      const pass = document.getElementById('admin_pass_input').value;
-      callAPI({action: 'provision', sheetId: CURRENT_ID, orgName: org, password: pass}, () => location.reload());
+    function saveSid() {
+      SID = document.getElementById('setup_sid').value.trim();
+      localStorage.setItem('pmis_active_sid', SID);
+      location.reload();
+    }
+
+    function startProvisioning() {
+      const org = document.getElementById('setup_org').value;
+      const pass = document.getElementById('setup_pass').value;
+      runVerboseSequence(["Deploying Table Structures...", "Initializing 78 Columns...", "Writing Security Protocols..."], () => {
+        callMotherShip({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload());
+      });
+    }
+
+    function loadEmployeeData() {
+      const p = document.getElementById('auth_pmis').value;
+      const d = document.getElementById('auth_dob').value;
+      document.getElementById('loader').style.display = 'flex';
+      callMotherShip({action: 'search', sheetId: SID, pmis: p, dob: d}, (res) => {
+        document.getElementById('loader').style.display = 'none';
+        if(res.error) return alert(res.error);
+        if(res.notFound) return M.toast({html: 'No record found.'});
+        Object.keys(res).forEach(k => {
+          const el = document.getElementsByName(k)[0];
+          if(el) { el.value = res[k]; el.dispatchEvent(new Event('input')); }
+        });
+        document.querySelectorAll('.atomic-save').forEach(b => b.classList.remove('show'));
+        M.updateTextFields();
+      });
     }
   </script>
 </body>
