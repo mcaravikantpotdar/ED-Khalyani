@@ -4,111 +4,138 @@
   <meta charset="UTF-8">
   <title id="pageTitle">SaaS PMIS Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
   <style>
-    body { background-color: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-    .container { width: 95%; max-width: 1200px; margin-top: 20px; }
-    .section-box { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    body { background-color: #f4f7f9; font-family: 'Segoe UI', sans-serif; }
+    .container { width: 98%; max-width: 1400px; margin-top: 20px; }
+    .section-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #1565c0; }
+    .header-panel { background: #1565c0; color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     
-    /* Branding Header */
-    .brand-header { background: #1565c0; color: white; padding: 25px; border-radius: 12px; margin-bottom: 20px; display: none; }
+    /* Atomic Save Button */
+    .field-wrapper { position: relative; }
+    .atomic-btn { 
+      position: absolute; right: 5px; top: 15px; 
+      display: none; cursor: pointer; color: #1565c0; z-index: 10;
+      background: white; border-radius: 50%;
+    }
+    .atomic-btn:hover { transform: scale(1.2); color: #2e7d32; }
+    
+    /* Status Badges */
+    .percent-badge { position: absolute; right: 35px; top: 18px; background: #2e7d32; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; display: none; }
     
     /* Loader */
-    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-    .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #1565c0; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1565c0; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* UI Nuances */
+    /* Admin Panel Styling */
+    .admin-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.9rem; }
     .u-case { text-transform: uppercase; }
-    .percent-badge { background: #2e7d32; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; display: none; font-weight: bold; }
-    .warning-msg { color: #ff9800; font-size: 0.8rem; display: none; font-weight: bold; }
-    .input-warning { border-bottom: 2px solid #ff9800 !important; }
-    .save-btn { width: 100%; max-width: 250px; border-radius: 25px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="spinner"></div><p id="loaderText" style="margin-top:15px; font-weight:bold; color:#1565c0;">Connecting to Mother Ship...</p></div>
+  <div id="loader"><div class="spinner"></div><p id="loaderText" style="margin-top:10px; font-weight:bold;">Initializing Mother Ship...</p></div>
+
+  <div id="adminModal" class="modal modal-fixed-footer" style="width: 90%; max-height: 90%;">
+    <div class="modal-content">
+      <h4><i class="material-icons left">settings</i> Schema Orchestrator</h4>
+      <p>Manage your Database Columns and Sections here.</p>
+      <div id="schemaList">
+        </div>
+      <hr>
+      <h5>Add New Column</h5>
+      <div class="row">
+        <div class="input-field col s12 m4"><input type="text" id="new_col_label"><label>Column Label</label></div>
+        <div class="input-field col s12 m4">
+          <select id="new_col_section">
+            <option value="Personal">Personal</option>
+            <option value="Contact & Family">Contact & Family</option>
+            <option value="Academic">Academic</option>
+            <option value="Professional">Professional</option>
+            <option value="Service History">Service History</option>
+          </select>
+          <label>Section</label>
+        </div>
+        <div class="col s12 m4"><button class="btn blue" style="margin-top:20px;" onclick="addNewField()">Add Field</button></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-close btn-flat">Close</button>
+    </div>
+  </div>
 
   <div id="setupModal" class="modal">
     <div class="modal-content">
-      <h4 id="setupTitle">Connect Your Sheet</h4>
+      <h4>System Setup</h4>
       <div id="idStep">
-        <p>Enter the Google Sheet ID of your blank sheet. (Ensure you have shared it with the Mother Ship email).</p>
-        <div class="input-field"><input type="text" id="input_sheet_id"><label>Google Sheet ID</label></div>
+        <div class="input-field"><input type="text" id="sheet_id_input"><label>Google Sheet ID</label></div>
         <button class="btn blue" onclick="saveSheetId()">Connect</button>
       </div>
       <div id="provisionStep" style="display:none;">
-        <p>Sheet detected! Now, let's initialize your organization.</p>
-        <div class="input-field"><input type="text" id="new_org_name"><label>Organization Name</label></div>
-        <div class="input-field"><input type="password" id="new_admin_pass"><label>Set Admin Password</label></div>
-        <button class="btn green" onclick="runProvisioning()">Build System Now</button>
+        <div class="input-field"><input type="text" id="org_name_input"><label>Organization Name</label></div>
+        <div class="input-field"><input type="password" id="admin_pass_input"><label>Set Admin Password</label></div>
+        <button class="btn green" onclick="runProvisioning()">Build Database</button>
       </div>
     </div>
   </div>
 
   <div class="container">
-    <div class="brand-header" id="brandHeader">
-      <h4 id="orgDisplay" style="margin:0; font-weight:bold;">Organization Name</h4>
-      <p id="subTitle" style="margin:0; opacity:0.8;">Employee Management Portal</p>
+    <div class="header-panel" id="brandHeader" style="display:none;">
+      <div>
+        <h4 id="orgDisplay" style="margin:0; font-weight:bold;">Portal</h4>
+        <span id="sheetDisplay" style="font-size:0.7rem; opacity:0.7;"></span>
+      </div>
+      <i class="material-icons" style="cursor:pointer;" onclick="openAdmin()">settings</i>
     </div>
 
-    <div id="authZone" class="section-box" style="display:none; border-top: 5px solid #1565c0;">
+    <div id="authZone" class="section-box" style="display:none;">
       <div class="row" style="margin-bottom:0">
-        <div class="input-field col s12 m4"><input type="text" id="auth_pmis"><label>PMIS CODE</label></div>
-        <div class="input-field col s12 m4"><input type="text" id="auth_dob" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
-        <div class="col s12 m4"><button class="btn-large blue darken-4" style="width:100%; margin-top:10px;" onclick="handleLogin()">LOAD RECORD</button></div>
-      </div>
-      <div style="text-align: right; margin-top: 10px;">
-        <a href="#" onclick="clearSession()" style="font-size: 0.8rem; color: #999;">Disconnect Sheet</a>
+        <div class="input-field col s12 m5"><input type="text" id="pmis_input"><label>PMIS CODE</label></div>
+        <div class="input-field col s12 m5"><input type="text" id="dob_input" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
+        <div class="col s12 m2"><button class="btn-large blue darken-4 w100" style="width:100%;" onclick="loadRecord()">LOAD</button></div>
       </div>
     </div>
 
-    <form id="dynamicForm"></form>
+    <form id="mainForm"></form>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
     const MOTHER_SHIP = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
-    let TARGET_SHEET_ID = localStorage.getItem('pmis_sheet_id');
+    let CURRENT_ID = localStorage.getItem('pmis_sheet_id');
+    let SCHEMA_CACHE = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       M.Modal.init(document.querySelectorAll('.modal'), {dismissible: false});
-      if (!TARGET_SHEET_ID) {
-        openSetup();
-      } else {
-        initApp();
-      }
+      M.FormSelect.init(document.querySelectorAll('select'));
+      if(!CURRENT_ID) { openSetup(); } else { initSystem(); }
     });
 
     function openSetup() {
-      document.getElementById('loader').style.display = 'none';
+      toggleLoader(false);
       M.Modal.getInstance(document.getElementById('setupModal')).open();
     }
 
     function saveSheetId() {
-      const id = document.getElementById('input_sheet_id').value.trim();
-      if(!id) return M.toast({html: 'Enter ID'});
-      TARGET_SHEET_ID = id;
-      localStorage.setItem('pmis_sheet_id', id);
-      initApp();
+      CURRENT_ID = document.getElementById('sheet_id_input').value.trim();
+      localStorage.setItem('pmis_sheet_id', CURRENT_ID);
+      initSystem();
     }
 
-    function initApp() {
-      toggleLoader(true, "Authenticating with Sheet...");
-      callMotherShip({action: 'init', sheetId: TARGET_SHEET_ID}, (res) => {
+    function initSystem() {
+      toggleLoader(true, "Connecting...");
+      callAPI({action: 'init', sheetId: CURRENT_ID}, (res) => {
         if(res.needsProvisioning) {
           document.getElementById('idStep').style.display = 'none';
           document.getElementById('provisionStep').style.display = 'block';
-          document.getElementById('setupTitle').innerText = "System Initialization";
           openSetup();
         } else {
           M.Modal.getInstance(document.getElementById('setupModal')).close();
+          SCHEMA_CACHE = res.schema;
           document.getElementById('orgDisplay').innerText = res.settings.ORG_NAME;
-          document.getElementById('brandHeader').style.display = 'block';
+          document.getElementById('brandHeader').style.display = 'flex';
           document.getElementById('authZone').style.display = 'block';
           renderForm(res.schema);
         }
@@ -116,106 +143,150 @@
       });
     }
 
-    function runProvisioning() {
-      const org = document.getElementById('new_org_name').value;
-      const pass = document.getElementById('new_admin_pass').value;
-      if(!org || !pass) return M.toast({html: 'Fill details'});
-      
-      toggleLoader(true, "Building 72-Column Engine...");
-      callMotherShip({action: 'provision', sheetId: TARGET_SHEET_ID, orgName: org, password: pass}, (res) => {
-        if(res.success) location.reload();
-        else alert(res.error);
-      });
-    }
-
     function renderForm(schema) {
-      const form = document.getElementById('dynamicForm');
+      const form = document.getElementById('mainForm');
+      form.innerHTML = '';
       const sections = [...new Set(schema.map(f => f.Section))];
       
-      sections.forEach((sec, idx) => {
+      sections.forEach(sec => {
         const box = document.createElement('div');
         box.className = 'section-box';
-        let html = `<h5>${sec}</h5><div class="row" id="row_${idx}">`;
+        box.innerHTML = `<h5>${sec}</h5><div class="row"></div>`;
+        const row = box.querySelector('.row');
         
         schema.filter(f => f.Section === sec).forEach(f => {
-          html += `<div class="input-field col s12 m4">
-                    <input type="text" name="${f.Label}" class="${f.Data_Type === 'MARKS' ? 'marks-mask' : ''} u-case">
-                    <label>${f.Label}</label>
-                    ${f.Data_Type === 'MARKS' ? '<span class="percent-badge"></span><span class="warning-msg">⚠️ Format: Obt/Total</span>' : ''}
-                   </div>`;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'input-field col s12 m4 field-wrapper';
+          wrapper.innerHTML = `
+            <input type="text" name="${f.Label}" class="u-case field-input">
+            <label>${f.Label}</label>
+            ${f.Data_Type === 'MARKS' ? '<span class="percent-badge"></span>' : ''}
+            <i class="material-icons atomic-btn" onclick="saveField(this)">save</i>
+          `;
+          row.appendChild(wrapper);
         });
-        
-        html += `</div><div style="text-align:right;"><button type="button" class="btn green save-btn" onclick="saveData('row_${idx}')">Save ${sec}</button></div>`;
-        box.innerHTML = html;
         form.appendChild(box);
       });
       M.updateTextFields();
-      attachListeners();
+      attachInputListeners();
     }
 
-    function handleLogin() {
-      const pmis = document.getElementById('auth_pmis').value;
-      const dob = document.getElementById('auth_dob').value;
-      toggleLoader(true, "Fetching Record...");
-      callMotherShip({action: 'search', sheetId: TARGET_SHEET_ID, pmis: pmis, dob: dob}, (data) => {
-        toggleLoader(false);
-        if(data.error) return alert(data.error);
-        if(data.notFound) return M.toast({html: 'No record found'});
-        
-        Object.keys(data).forEach(key => {
-          const el = document.getElementsByName(key)[0];
-          if(el) { el.value = data[key]; el.dispatchEvent(new Event('input')); }
+    function attachInputListeners() {
+      document.querySelectorAll('.field-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const btn = e.target.parentElement.querySelector('.atomic-btn');
+          btn.style.display = 'block';
+          btn.innerHTML = 'save';
+          btn.style.color = '#1565c0';
+          
+          if(e.target.name.includes('Marks')) {
+            const badge = e.target.parentElement.querySelector('.percent-badge');
+            const p = e.target.value.split('/');
+            if(p.length === 2 && p[1]>0) {
+              badge.innerText = ((p[0]/p[1])*100).toFixed(1)+'%';
+              badge.style.display = 'block';
+            }
+          }
         });
+      });
+    }
+
+    function saveField(btn) {
+      const input = btn.parentElement.querySelector('input');
+      const pmis = document.getElementById('pmis_input').value;
+      if(!pmis) return alert("Load a record first!");
+
+      btn.innerHTML = 'sync';
+      btn.style.opacity = '0.5';
+
+      callAPI({
+        action: 'atomicSave',
+        sheetId: CURRENT_ID,
+        pmis: pmis,
+        fieldName: input.name,
+        newValue: input.value.toUpperCase()
+      }, (res) => {
+        if(res.success) {
+          btn.innerHTML = 'check_circle';
+          btn.style.color = '#2e7d32';
+          btn.style.opacity = '1';
+          setTimeout(() => { btn.style.display = 'none'; }, 2000);
+        }
+      });
+    }
+
+    function loadRecord() {
+      const pmis = document.getElementById('pmis_input').value;
+      const dob = document.getElementById('dob_input').value;
+      toggleLoader(true, "Searching...");
+      callAPI({action: 'search', sheetId: CURRENT_ID, pmis: pmis, dob: dob}, (res) => {
+        toggleLoader(false);
+        if(res.error) return alert(res.error);
+        if(res.notFound) return M.toast({html: 'No record found'});
+        
+        Object.keys(res).forEach(key => {
+          const el = document.getElementsByName(key)[0];
+          if(el) { el.value = res[key]; el.dispatchEvent(new Event('input')); }
+        });
+        document.querySelectorAll('.atomic-btn').forEach(b => b.style.display = 'none');
         M.updateTextFields();
       });
     }
 
-    function saveData(rowId) {
-      const pmis = document.getElementById('auth_pmis').value;
-      if(!pmis) return alert("Identify record first");
-      const payload = {};
-      document.getElementById(rowId).querySelectorAll('input').forEach(i => payload[i.name] = i.value);
-      
-      toggleLoader(true, "Syncing Data...");
-      callMotherShip({action: 'save', sheetId: TARGET_SHEET_ID, pmis: pmis, payload: payload}, (res) => {
-        toggleLoader(false);
-        M.toast({html: res.message});
+    // --- ADMIN ORCHESTRATOR ---
+    function openAdmin() {
+      const pass = prompt("Enter Admin Password:");
+      callAPI({action: 'init', sheetId: CURRENT_ID}, (res) => {
+        if(String(pass) === String(res.settings.ADMIN_PASSWORD)) {
+          renderSchemaEditor(res.schema);
+          M.Modal.getInstance(document.getElementById('adminModal')).open();
+        } else { alert("Unauthorized"); }
+      });
+    }
+
+    function renderSchemaEditor(schema) {
+      const list = document.getElementById('schemaList');
+      list.innerHTML = '<div class="row blue-text" style="font-weight:bold;"><div class="col s6">Field Label</div><div class="col s6">Current Section</div></div>';
+      schema.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'admin-row row';
+        div.innerHTML = `<div class="col s6">${f.Label}</div><div class="col s6 grey-text text-darken-2">${f.Section}</div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function addNewField() {
+      const label = document.getElementById('new_col_label').value;
+      const section = document.getElementById('new_col_section').value;
+      if(!label) return alert("Enter a label");
+
+      toggleLoader(true, "Modifying Database...");
+      callAPI({
+        action: 'manageSchema',
+        subAction: 'addColumn',
+        sheetId: CURRENT_ID,
+        payload: { label: label, section: section, type: 'TEXT_UC', order: 999 }
+      }, (res) => {
+        if(res.success) location.reload();
       });
     }
 
     // --- UTILS ---
-    function callMotherShip(data, callback) {
+    function callAPI(data, cb) {
       fetch(MOTHER_SHIP, { method: 'POST', body: JSON.stringify(data) })
-        .then(res => res.json())
-        .then(res => callback(res))
-        .catch(err => { toggleLoader(false); alert("Connection Lost: " + err); });
+        .then(res => res.json()).then(res => cb(res))
+        .catch(e => { toggleLoader(false); alert("Mother Ship Error: " + e); });
     }
 
-    function toggleLoader(show, text) {
-      document.getElementById('loader').style.display = show ? 'flex' : 'none';
-      if(text) document.getElementById('loaderText').innerText = text;
+    function toggleLoader(s, t) {
+      document.getElementById('loader').style.display = s ? 'flex' : 'none';
+      if(t) document.getElementById('loaderText').innerText = t;
     }
 
-    function clearSession() {
-      localStorage.removeItem('pmis_sheet_id');
-      location.reload();
-    }
-
-    function attachListeners() {
-      document.querySelectorAll('.u-case').forEach(el => el.addEventListener('input', e => e.target.value = e.target.value.toUpperCase()));
-      document.querySelectorAll('.marks-mask').forEach(el => {
-        el.addEventListener('input', e => {
-          const val = e.target.value;
-          const badge = e.target.parentNode.querySelector('.percent-badge');
-          const warn = e.target.parentNode.querySelector('.warning-msg');
-          if(val && !val.includes('/')) { e.target.classList.add('input-warning'); warn.style.display='block'; badge.style.display='none'; }
-          else {
-            e.target.classList.remove('input-warning'); warn.style.display='none';
-            const p = val.split('/');
-            if(p.length === 2 && p[1]>0) { badge.innerText = ((p[0]/p[1])*100).toFixed(2)+'%'; badge.style.display='inline-block'; }
-          }
-        });
-      });
+    function runProvisioning() {
+      const org = document.getElementById('org_name_input').value;
+      const pass = document.getElementById('admin_pass_input').value;
+      callAPI({action: 'provision', sheetId: CURRENT_ID, orgName: org, password: pass}, () => location.reload());
     }
   </script>
 </body>
