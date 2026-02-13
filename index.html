@@ -2,119 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PMIS SaaS Command</title>
+  <title>PMIS Command v6.1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #0f172a; --accent: #3b82f6; --success: #10b981; --bg: #f8fafc; --card: #ffffff; }
-    body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: #1e293b; overflow-x: hidden; }
-    
-    /* Cinematic Symphony Loader */
-    #loader { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
-    .pulse-ring { width: 100px; height: 100px; border: 3px solid #f1f5f9; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    :root { --primary: #0f172a; --accent: #3b82f6; --error: #ef4444; }
+    body { background: #f8fafc; font-family: 'Inter', sans-serif; }
+    #loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .pulse-ring { width: 80px; height: 80px; border: 4px solid #f1f5f9; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite linear; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    #verboseText { margin-top: 30px; font-weight: 600; font-size: 1.2rem; color: var(--primary); text-align: center; min-height: 1.5rem; }
-
-    /* Premium Header */
-    .app-header { background: var(--primary); color: white; padding: 40px 20px; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px; position: relative; }
-    .settings-trigger { position: absolute; top: 20px; right: 20px; cursor: pointer; opacity: 0.7; transition: 0.3s; }
-    .settings-trigger:hover { opacity: 1; transform: rotate(45deg); }
-
-    /* Card Architecture */
-    .section-card { background: var(--card); border-radius: 20px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8f0; transition: transform 0.3s; }
-    .section-card:hover { transform: translateY(-5px); }
-    .section-label { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 25px; display: flex; align-items: center; letter-spacing: -0.02em; }
-    .section-label i { margin-right: 12px; color: var(--accent); }
-
-    /* Atomic Save Logic */
-    .field-wrapper { position: relative; }
-    .atomic-btn { 
-      position: absolute; right: 10px; top: 15px; opacity: 0; 
-      transform: translateX(15px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      cursor: pointer; color: var(--accent); background: white; z-index: 10;
-    }
-    .atomic-btn.visible { opacity: 1; transform: translateX(0); }
+    #verboseText { margin-top: 25px; font-weight: 600; color: var(--primary); text-align: center; max-width: 80%; }
+    .error-text { color: var(--error) !important; font-size: 0.9rem; margin-top: 10px; }
     
-    /* Admin Orchestrator Tabs */
-    .admin-tab-content { padding-top: 20px; }
-    .orchestrator-row { border-bottom: 1px solid #f1f5f9; padding: 15px 0; display: flex; align-items: center; }
-
+    /* Layout */
+    .app-header { background: var(--primary); color: white; padding: 40px 0; border-radius: 0 0 24px 24px; margin-bottom: 30px; }
+    .section-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+    .field-wrapper { position: relative; }
+    .atomic-btn { position: absolute; right: 10px; top: 12px; opacity: 0; transform: translateX(10px); transition: 0.3s; cursor: pointer; color: var(--accent); background: white; }
+    .atomic-btn.visible { opacity: 1; transform: translateX(0); }
     .u-case { text-transform: uppercase; }
-    .percent-badge { position: absolute; right: 45px; top: 18px; background: var(--success); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: none; }
   </style>
 </head>
 <body>
 
   <div id="loader">
-    <div class="pulse-ring"></div>
-    <div id="verboseText">Establishing Secure Link...</div>
+    <div class="pulse-ring" id="ring"></div>
+    <p id="verboseText">Initiating Handshake...</p>
+    <button id="retryBtn" class="btn red" style="display:none; margin-top:20px;" onclick="location.reload()">Retry Connection</button>
   </div>
 
-  <div id="adminModal" class="modal modal-fixed-footer" style="width: 95%; height: 90%; max-height: 90%; border-radius: 20px;">
-    <div class="modal-content">
-      <h4><i class="material-icons left blue-text">dashboard_customize</i> Command Center</h4>
-      <div class="row">
-        <div class="col s12">
-          <ul class="tabs">
-            <li class="tab col s6"><a class="active" href="#tabFields">Field Mapping</a></li>
-            <li class="tab col s6"><a href="#tabSections">Section Authority</a></li>
-          </ul>
-        </div>
-        <div id="tabFields" class="col s12 admin-tab-content">
-          <p class="grey-text">Assign fields to sections and set their numeric display order.</p>
-          <div id="fieldMappingList"></div>
-        </div>
-        <div id="tabSections" class="col s12 admin-tab-content">
-          <p class="grey-text">Rename or Delete sections. Deleted sections migrate data to "Un-Grouped Data".</p>
-          <div id="sectionAuthorityList"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-large blue accent-4" onclick="commitSchemaChanges()">Sync Structural Changes</button>
-      <button class="modal-close btn-flat">Dismiss</button>
-    </div>
-  </div>
-
-  <div id="setupModal" class="modal" style="border-radius: 20px;">
+  <div id="setupModal" class="modal">
     <div class="modal-content">
       <h4 id="setupHeader">System Connection</h4>
       <div id="stepConnect">
-        <p>Supply a Google Sheet ID to connect the Mother Ship.</p>
         <div class="input-field"><input type="text" id="setup_sid"><label>Google Sheet ID</label></div>
-        <button class="btn-large blue darken-4 w100" style="width:100%" onclick="saveSheetId()">Initialize Link</button>
+        <button class="btn blue" style="width:100%" onclick="saveSid()">Connect Sheet</button>
       </div>
       <div id="stepBuild" style="display:none;">
-        <p>DNA Missing. Shall we deploy the 78-column architecture?</p>
         <div class="input-field"><input type="text" id="setup_org"><label>Organization Name</label></div>
         <div class="input-field"><input type="password" id="setup_pass"><label>Admin Password</label></div>
-        <button class="btn-large green accent-4 w100" style="width:100%" onclick="runDeployment()">Launch Provisioning</button>
+        <button class="btn green" style="width:100%" onclick="runDeployment()">Launch Provisioning</button>
       </div>
     </div>
   </div>
 
   <div id="appBody" style="display:none;">
-    <header class="app-header">
-      <div class="container">
-        <h2 id="displayOrgName" style="margin:0; font-weight:800; letter-spacing:-1px;">...</h2>
-        <p style="margin:0; opacity:0.6; font-weight:300;">Powered by Mother Ship v6.0</p>
-        <i class="material-icons settings-trigger" onclick="launchAdmin()">settings</i>
-      </div>
-    </header>
-
+    <div class="app-header"><div class="container"><h3 id="dispOrg" style="margin:0; font-weight:800;">Portal</h3></div></div>
     <div class="container">
-      <div class="section-card" style="margin-top:-60px; position:relative; z-index:10;">
+      <div class="section-card" style="margin-top:-50px;">
         <div class="row" style="margin-bottom:0">
-          <div class="input-field col s12 m5"><input type="text" id="p_code"><label>PMIS CODE</label></div>
-          <div class="input-field col s12 m5"><input type="text" id="p_dob" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
-          <div class="col s12 m2"><button class="btn-large var-accent" style="width:100%; background:var(--accent); height:54px; border-radius:12px;" onclick="searchRecord()">LOAD</button></div>
+          <div class="input-field col s12 m5"><input type="text" id="pmis_in"><label>PMIS CODE</label></div>
+          <div class="input-field col s12 m5"><input type="text" id="dob_in" placeholder="DD-MM-YYYY"><label>DOB</label></div>
+          <div class="col s12 m2"><button class="btn-large blue accent-4" style="width:100%" onclick="searchRec()">LOAD</button></div>
         </div>
       </div>
-
       <div id="formContainer"></div>
     </div>
   </div>
@@ -123,228 +66,92 @@
   <script>
     const MOTHER_SHIP = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
     let SID = localStorage.getItem('pmis_v6_sid');
-    let MASTER_SCHEMA = [];
 
-    document.addEventListener('DOMContentLoaded', () => {
+    window.onload = () => {
       M.Modal.init(document.querySelectorAll('.modal'), {dismissible: false});
-      M.Tabs.init(document.querySelectorAll('.tabs'));
-      if(!SID) { launchOnboarding(); } else { startup(); }
-    });
+      if(!SID) { stopLoader("Welcome. Please provide a Sheet ID."); openSetup(); } 
+      else { startup(); }
+    };
 
-    async function startup() {
-      await verboseLoader(["Connecting to Mother Ship...", "Detecting Sheet DNA..."]);
-      callAPI({action: 'checkStatus', sheetId: SID}, async (res) => {
-        if(res.status === "NEW") {
-          await verboseLoader(["Blank Sheet Identified.", "Waiting for Provisioning Command..."]);
-          openSetupModal(true);
-        } else {
-          await verboseLoader(["DNA Match Found.", "Rehydrating Environment..."]);
-          loadApp();
-        }
+    function startup() {
+      setMsg("Connecting to Mother Ship...");
+      callAPI({action: 'checkStatus', sheetId: SID}, (res) => {
+        if(res.error) return stopLoader("Mother Ship Error: " + res.error, true);
+        if(res.status === "NEW") { stopLoader("Ready for Provisioning."); openSetup(true); }
+        else { setMsg("Rehydrating DNA..."); loadData(); }
       });
     }
 
-    function loadApp() {
+    function loadData() {
       callAPI({action: 'init', sheetId: SID}, (res) => {
-        MASTER_SCHEMA = res.schema;
-        document.getElementById('displayOrgName').innerText = res.settings.ORG_NAME;
-        renderUI(res.schema);
-        document.getElementById('loader').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loader').style.display = 'none';
-          document.getElementById('appBody').style.display = 'block';
-        }, 500);
+        if(res.error) return stopLoader("Init Error: " + res.error, true);
+        document.getElementById('dispOrg').innerText = res.settings.ORG_NAME;
+        render(res.schema);
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('appBody').style.display = 'block';
       });
     }
 
-    function renderUI(schema) {
+    function render(schema) {
       const container = document.getElementById('formContainer');
-      container.innerHTML = '';
       const sections = [...new Set(schema.map(f => f.Section))].sort();
-      
       sections.forEach(sec => {
         const card = document.createElement('div');
         card.className = 'section-card';
-        card.innerHTML = `<div class="section-label"><i class="material-icons">folder</i> ${sec}</div><div class="row"></div>`;
+        card.innerHTML = `<h5>${sec}</h5><div class="row"></div>`;
         const row = card.querySelector('.row');
-        
         schema.filter(f => f.Section === sec).sort((a,b) => a.Order - b.Order).forEach(f => {
-          const field = document.createElement('div');
-          field.className = 'input-field col s12 m4 field-wrapper';
-          field.innerHTML = `
-            <input type="text" name="${f.ID}" class="u-case data-input">
-            <label>${f.Label}</label>
-            ${f.Type === 'MARKS' ? '<span class="percent-badge"></span>' : ''}
-            <i class="material-icons atomic-btn" onclick="saveAtomic(this)">save</i>
-          `;
-          row.appendChild(field);
+          row.innerHTML += `<div class="input-field col s12 m4 field-wrapper">
+            <input type="text" name="${f.ID}" class="u-case d-in"><label>${f.Label}</label>
+            <i class="material-icons atomic-btn" onclick="saveOne(this)">save</i>
+          </div>`;
         });
         container.appendChild(card);
       });
       M.updateTextFields();
-      attachInputLogic();
-    }
-
-    function attachInputLogic() {
-      document.querySelectorAll('.data-input').forEach(input => {
-        input.oninput = (e) => {
-          const btn = e.target.parentElement.querySelector('.atomic-btn');
-          btn.classList.add('visible');
-          btn.innerHTML = 'save';
-          btn.style.color = '#3b82f6';
-          
-          if(e.target.name.includes('Marks')) {
-            const badge = e.target.parentElement.querySelector('.percent-badge');
-            const p = e.target.value.split('/');
-            if(p.length === 2 && p[1] > 0) {
-              badge.innerText = ((p[0]/p[1])*100).toFixed(1) + '%';
-              badge.style.display = 'block';
-            }
-          }
-        };
-      });
-    }
-
-    function saveAtomic(btn) {
-      const input = btn.parentElement.querySelector('input');
-      const pmis = document.getElementById('p_code').value;
-      if(!pmis) return M.toast({html: 'Load record first!'});
-
-      btn.innerHTML = 'sync';
-      btn.style.opacity = '0.5';
-
-      callAPI({
-        action: 'atomicSave', sheetId: SID, pmis: pmis,
-        fieldName: input.name, newValue: input.value.toUpperCase()
-      }, (res) => {
-        if(res.success) {
-          btn.innerHTML = 'check_circle';
-          btn.style.color = '#10b981';
-          btn.style.opacity = '1';
-          setTimeout(() => btn.classList.remove('visible'), 2000);
-        }
-      });
-    }
-
-    // --- GOD MODE ADMIN ---
-    async function launchAdmin() {
-      const pass = prompt("Enter Admin Key:");
-      callAPI({action: 'init', sheetId: SID}, (res) => {
-        if(String(pass) === String(res.settings.ADMIN_PASSWORD)) {
-          buildOrchestrator(res.schema);
-          M.Modal.getInstance(document.getElementById('adminModal')).open();
-        } else { alert("Access Denied."); }
-      });
-    }
-
-    function buildOrchestrator(schema) {
-      const sections = [...new Set(schema.map(f => f.Section))];
-      
-      // Tab 1: Field Mapping
-      const fieldList = document.getElementById('fieldMappingList');
-      fieldList.innerHTML = '';
-      schema.sort((a,b) => a.Label.localeCompare(b.Label)).forEach(f => {
-        const row = document.createElement('div');
-        row.className = 'orchestrator-row row';
-        row.innerHTML = `
-          <div class="col s4">${f.Label}</div>
-          <div class="col s5">
-            <select class="browser-default update-sec" data-id="${f.ID}">
-              ${sections.map(s => `<option value="${s}" ${f.Section === s ? 'selected' : ''}>${s}</option>`).join('')}
-            </select>
-          </div>
-          <div class="col s3"><input type="number" class="update-ord" value="${f.Order}" data-id="${f.ID}"></div>
-        `;
-        fieldList.appendChild(row);
-      });
-
-      // Tab 2: Section Authority
-      const secList = document.getElementById('sectionAuthorityList');
-      secList.innerHTML = sections.map(s => `
-        <div class="orchestrator-row row">
-          <div class="col s8"><strong>${s}</strong></div>
-          <div class="col s4 text-right">
-            <button class="btn-small red" onclick="deleteSection('${s}')">Delete</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function commitSchemaChanges() {
-      const updates = Array.from(document.querySelectorAll('.update-sec')).map(sel => {
-        const id = sel.dataset.id;
-        const ord = document.querySelector(`.update-ord[data-id="${id}"]`).value;
-        return { ID: id, Section: sel.value, Order: parseInt(ord) };
-      });
-
-      document.getElementById('loader').style.display = 'flex';
-      document.getElementById('loader').style.opacity = '1';
-      await verboseLoader(["Calculating New Architecture...", "Syncing with Mother Ship..."]);
-      
-      callAPI({action: 'updateSchema', sheetId: SID, payload: {fieldUpdates: updates}}, () => location.reload());
-    }
-
-    function deleteSection(name) {
-      if(confirm(`Delete "${name}"? Columns will move to "Un-Grouped Data".`)) {
-        callAPI({action: 'updateSchema', sheetId: SID, payload: {deletedSections: [name]}}, () => location.reload());
-      }
-    }
-
-    // --- SYSTEM UTILS ---
-    async function verboseLoader(msgs) {
-      const display = document.getElementById('verboseText');
-      for (const m of msgs) {
-        display.innerText = m;
-        await new Promise(r => setTimeout(r, 1200));
-      }
+      document.querySelectorAll('.d-in').forEach(i => i.oninput = (e) => e.target.parentElement.querySelector('.atomic-save-btn')?.classList.add('visible'));
     }
 
     function callAPI(data, cb) {
-      fetch(MOTHER_SHIP, {method: 'POST', body: JSON.stringify(data)}).then(r => r.json()).then(cb).catch(e => alert("Signal Lost."));
+      fetch(MOTHER_SHIP, {method: 'POST', body: JSON.stringify(data)})
+        .then(r => r.json()).then(cb)
+        .catch(e => stopLoader("Network Signal Lost. " + e, true));
     }
 
-    function saveSheetId() {
+    function setMsg(m) { document.getElementById('verboseText').innerText = m; }
+    
+    function stopLoader(m, isErr = false) {
+      document.getElementById('ring').style.display = isErr ? 'none' : 'block';
+      setMsg(m);
+      if(isErr) {
+        document.getElementById('verboseText').classList.add('error-text');
+        document.getElementById('retryBtn').style.display = 'block';
+      }
+    }
+
+    function openSetup(isProv = false) {
+      document.getElementById('loader').style.display = 'none';
+      if(isProv) {
+        document.getElementById('stepConnect').style.display = 'none';
+        document.getElementById('stepBuild').style.display = 'block';
+        document.getElementById('setupHeader').innerText = "Provisioning Required";
+      }
+      M.Modal.getInstance(document.getElementById('setupModal')).open();
+    }
+
+    function saveSid() {
       SID = document.getElementById('setup_sid').value.trim();
       localStorage.setItem('pmis_v6_sid', SID);
       location.reload();
     }
 
-    function openSetupModal(isProvision = false) {
-      document.getElementById('loader').style.display = 'none';
-      if(isProvision) {
-        document.getElementById('stepConnect').style.display = 'none';
-        document.getElementById('stepBuild').style.display = 'block';
-        document.getElementById('setupHeader').innerText = "System Provisioning";
-      }
-      M.Modal.getInstance(document.getElementById('setupModal')).open();
-    }
-
-    async function runDeployment() {
+    function runDeployment() {
       const org = document.getElementById('setup_org').value;
       const pass = document.getElementById('setup_pass').value;
       document.getElementById('setupModal').style.display = 'none';
       document.getElementById('loader').style.display = 'flex';
-      document.getElementById('loader').style.opacity = '1';
-      await verboseLoader(["Establishing Foundation...", "Injecting 78-Column DNA...", "Securing Credentials..."]);
+      setMsg("Building Architecture...");
       callAPI({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload());
-    }
-
-    function searchRecord() {
-      const p = document.getElementById('p_code').value;
-      const d = document.getElementById('p_dob').value;
-      document.getElementById('loader').style.display = 'flex';
-      document.getElementById('loader').style.opacity = '1';
-      callAPI({action: 'search', sheetId: SID, pmis: p, dob: d}, (res) => {
-        document.getElementById('loader').style.display = 'none';
-        if(res.error) return alert(res.error);
-        if(res.notFound) return M.toast({html: 'No record match.'});
-        Object.keys(res).forEach(k => {
-          const el = document.getElementsByName(k)[0];
-          if(el) { el.value = res[k]; el.dispatchEvent(new Event('input')); }
-        });
-        document.querySelectorAll('.atomic-btn').forEach(b => b.classList.remove('visible'));
-        M.updateTextFields();
-      });
     }
   </script>
 </body>
