@@ -2,156 +2,281 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PMIS Command v6.1</title>
+  <title>PMIS Command Center v6.2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
   <style>
-    :root { --primary: #0f172a; --accent: #3b82f6; --error: #ef4444; }
-    body { background: #f8fafc; font-family: 'Inter', sans-serif; }
-    #loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    :root { --primary: #0f172a; --accent: #3b82f6; --success: #10b981; --error: #ef4444; --bg: #f8fafc; }
+    body { background: var(--bg); font-family: 'Inter', sans-serif; color: #1e293b; }
+    
+    /* Loader & Symphony */
+    #loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
     .pulse-ring { width: 80px; height: 80px; border: 4px solid #f1f5f9; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s infinite linear; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    #verboseText { margin-top: 25px; font-weight: 600; color: var(--primary); text-align: center; max-width: 80%; }
-    .error-text { color: var(--error) !important; font-size: 0.9rem; margin-top: 10px; }
+    #verboseText { margin-top: 25px; font-weight: 600; color: var(--primary); text-align: center; }
+    .error-text { color: var(--error) !important; }
+
+    /* UI Components */
+    .app-header { background: var(--primary); color: white; padding: 40px 0; border-radius: 0 0 24px 24px; position: relative; margin-bottom: 30px; }
+    .settings-btn { position: absolute; top: 20px; right: 20px; cursor: pointer; opacity: 0.7; }
+    .settings-btn:hover { opacity: 1; transform: rotate(45deg); transition: 0.3s; }
     
-    /* Layout */
-    .app-header { background: var(--primary); color: white; padding: 40px 0; border-radius: 0 0 24px 24px; margin-bottom: 30px; }
-    .section-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+    .section-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    .section-title { font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; }
+    .section-title i { margin-right: 10px; color: var(--accent); }
+
+    /* Atomic Save */
     .field-wrapper { position: relative; }
-    .atomic-btn { position: absolute; right: 10px; top: 12px; opacity: 0; transform: translateX(10px); transition: 0.3s; cursor: pointer; color: var(--accent); background: white; }
+    .atomic-btn { position: absolute; right: 10px; top: 12px; opacity: 0; transform: translateX(10px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; color: var(--accent); background: white; z-index: 5; }
     .atomic-btn.visible { opacity: 1; transform: translateX(0); }
+
+    /* Admin Panel */
+    .orchestrator-row { border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
     .u-case { text-transform: uppercase; }
+    .percent-badge { position: absolute; right: 45px; top: 18px; background: var(--success); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: none; }
   </style>
 </head>
 <body>
 
   <div id="loader">
     <div class="pulse-ring" id="ring"></div>
-    <p id="verboseText">Initiating Handshake...</p>
-    <button id="retryBtn" class="btn red" style="display:none; margin-top:20px;" onclick="location.reload()">Retry Connection</button>
+    <p id="verboseText">Connecting...</p>
+    <button id="retryBtn" class="btn red" style="display:none; margin-top:20px;" onclick="location.reload()">Retry</button>
   </div>
 
-  <div id="setupModal" class="modal">
+  <div id="adminModal" class="modal modal-fixed-footer" style="width:90%; height:90%; border-radius:20px;">
     <div class="modal-content">
-      <h4 id="setupHeader">System Connection</h4>
+      <h4><i class="material-icons left blue-text">tune</i> Admin Command Center</h4>
+      <div class="row">
+        <div class="col s12">
+          <ul class="tabs">
+            <li class="tab col s6"><a class="active" href="#tabFields">Field Mapping</a></li>
+            <li class="tab col s6"><a href="#tabSections">Sections</a></li>
+          </ul>
+        </div>
+        <div id="tabFields" class="col s12" style="padding-top:20px;">
+          <div id="fieldList"></div>
+        </div>
+        <div id="tabSections" class="col s12" style="padding-top:20px;">
+          <div id="sectionList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn blue darken-2" onclick="saveSchemaChanges()">Apply Changes</button>
+      <button class="modal-close btn-flat">Close</button>
+    </div>
+  </div>
+
+  <div id="setupModal" class="modal" style="border-radius:20px;">
+    <div class="modal-content">
+      <h4 id="setupHeader">Database Link</h4>
       <div id="stepConnect">
         <div class="input-field"><input type="text" id="setup_sid"><label>Google Sheet ID</label></div>
-        <button class="btn blue" style="width:100%" onclick="saveSid()">Connect Sheet</button>
+        <button class="btn blue" style="width:100%" onclick="setSid()">Connect</button>
       </div>
       <div id="stepBuild" style="display:none;">
         <div class="input-field"><input type="text" id="setup_org"><label>Organization Name</label></div>
         <div class="input-field"><input type="password" id="setup_pass"><label>Admin Password</label></div>
-        <button class="btn green" style="width:100%" onclick="runDeployment()">Launch Provisioning</button>
+        <button class="btn green" style="width:100%" onclick="deployNow()">Provision System</button>
       </div>
     </div>
   </div>
 
   <div id="appBody" style="display:none;">
-    <div class="app-header"><div class="container"><h3 id="dispOrg" style="margin:0; font-weight:800;">Portal</h3></div></div>
+    <header class="app-header">
+      <div class="container">
+        <h3 id="dispOrg" style="margin:0; font-weight:900;">Portal</h3>
+        <i class="material-icons settings-btn" onclick="openAdmin()">settings</i>
+      </div>
+    </header>
+
     <div class="container">
-      <div class="section-card" style="margin-top:-50px;">
+      <div class="section-card" style="margin-top:-60px; position:relative; z-index:10;">
         <div class="row" style="margin-bottom:0">
           <div class="input-field col s12 m5"><input type="text" id="pmis_in"><label>PMIS CODE</label></div>
-          <div class="input-field col s12 m5"><input type="text" id="dob_in" placeholder="DD-MM-YYYY"><label>DOB</label></div>
-          <div class="col s12 m2"><button class="btn-large blue accent-4" style="width:100%" onclick="searchRec()">LOAD</button></div>
+          <div class="input-field col s12 m5"><input type="text" id="dob_in" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
+          <div class="col s12 m2"><button class="btn-large blue accent-4" style="width:100%" onclick="searchData()">LOAD</button></div>
         </div>
       </div>
-      <div id="formContainer"></div>
+      <div id="mainForm"></div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
-    const MOTHER_SHIP = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
+    const API = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
     let SID = localStorage.getItem('pmis_v6_sid');
+    let CACHED_SCHEMA = [];
 
     window.onload = () => {
       M.Modal.init(document.querySelectorAll('.modal'), {dismissible: false});
-      if(!SID) { stopLoader("Welcome. Please provide a Sheet ID."); openSetup(); } 
+      M.Tabs.init(document.querySelectorAll('.tabs'));
+      if(!SID) { stopLoader("Ready."); openSetup(); } 
       else { startup(); }
     };
 
     function startup() {
-      setMsg("Connecting to Mother Ship...");
-      callAPI({action: 'checkStatus', sheetId: SID}, (res) => {
-        if(res.error) return stopLoader("Mother Ship Error: " + res.error, true);
-        if(res.status === "NEW") { stopLoader("Ready for Provisioning."); openSetup(true); }
-        else { setMsg("Rehydrating DNA..."); loadData(); }
+      setMsg("Checking DNA...");
+      call( {action: 'checkStatus', sheetId: SID}, (res) => {
+        if(res.error) return stopLoader("Error: " + res.error, true);
+        if(res.status === "NEW") { stopLoader("Empty Sheet."); openSetup(true); }
+        else { setMsg("Rehydrating..."); initApp(); }
       });
     }
 
-    function loadData() {
-      callAPI({action: 'init', sheetId: SID}, (res) => {
-        if(res.error) return stopLoader("Init Error: " + res.error, true);
+    function initApp() {
+      call({action: 'init', sheetId: SID}, (res) => {
+        CACHED_SCHEMA = res.schema;
         document.getElementById('dispOrg').innerText = res.settings.ORG_NAME;
-        render(res.schema);
+        renderForm(res.schema);
         document.getElementById('loader').style.display = 'none';
         document.getElementById('appBody').style.display = 'block';
       });
     }
 
-    function render(schema) {
-      const container = document.getElementById('formContainer');
+    function renderForm(schema) {
+      const container = document.getElementById('mainForm');
+      container.innerHTML = '';
       const sections = [...new Set(schema.map(f => f.Section))].sort();
+      
       sections.forEach(sec => {
         const card = document.createElement('div');
         card.className = 'section-card';
-        card.innerHTML = `<h5>${sec}</h5><div class="row"></div>`;
+        card.innerHTML = `<div class="section-title"><i class="material-icons">folder</i> ${sec}</div><div class="row"></div>`;
         const row = card.querySelector('.row');
-        schema.filter(f => f.Section === sec).sort((a,b) => a.Order - b.Order).forEach(f => {
-          row.innerHTML += `<div class="input-field col s12 m4 field-wrapper">
-            <input type="text" name="${f.ID}" class="u-case d-in"><label>${f.Label}</label>
-            <i class="material-icons atomic-btn" onclick="saveOne(this)">save</i>
-          </div>`;
+        schema.filter(f => f.Section === sec).sort((a,b)=>a.Order-b.Order).forEach(f => {
+          row.innerHTML += `
+            <div class="input-field col s12 m4 field-wrapper">
+              <input type="text" name="${f.ID}" class="u-case d-input"><label>${f.Label}</label>
+              ${f.Type === 'MARKS' ? '<span class="percent-badge"></span>' : ''}
+              <i class="material-icons atomic-btn" onclick="saveAtomic(this)">save</i>
+            </div>`;
         });
         container.appendChild(card);
       });
       M.updateTextFields();
-      document.querySelectorAll('.d-in').forEach(i => i.oninput = (e) => e.target.parentElement.querySelector('.atomic-save-btn')?.classList.add('visible'));
+      attachInputHandlers();
     }
 
-    function callAPI(data, cb) {
-      fetch(MOTHER_SHIP, {method: 'POST', body: JSON.stringify(data)})
-        .then(r => r.json()).then(cb)
-        .catch(e => stopLoader("Network Signal Lost. " + e, true));
+    function attachInputHandlers() {
+      document.querySelectorAll('.d-input').forEach(input => {
+        input.oninput = (e) => {
+          const btn = e.target.parentElement.querySelector('.atomic-btn');
+          btn.classList.add('visible');
+          btn.innerHTML = 'save';
+          btn.style.color = '#3b82f6';
+          
+          if(e.target.name.includes('Marks')) {
+            const badge = e.target.parentElement.querySelector('.percent-badge');
+            const p = e.target.value.split('/');
+            if(p.length === 2 && p[1] > 0) {
+              badge.innerText = ((p[0]/p[1])*100).toFixed(1) + '%';
+              badge.style.display = 'block';
+            }
+          }
+        };
+      });
     }
 
+    function saveAtomic(btn) {
+      const input = btn.parentElement.querySelector('input');
+      const pmis = document.getElementById('pmis_in').value;
+      if(!pmis) return M.toast({html: 'Load record first!'});
+      btn.innerHTML = 'sync';
+      call({action: 'atomicSave', sheetId: SID, pmis: pmis, fieldName: input.name, newValue: input.value.toUpperCase()}, (res) => {
+        btn.innerHTML = 'check_circle'; btn.style.color = '#10b981';
+        setTimeout(() => btn.classList.remove('visible'), 2000);
+      });
+    }
+
+    // --- ADMIN LOGIC ---
+    function openAdmin() {
+      const pass = prompt("Admin Password:");
+      call({action: 'init', sheetId: SID}, (res) => {
+        if(String(pass) === String(res.settings.ADMIN_PASSWORD)) {
+          buildOrchestrator(res.schema);
+          M.Modal.getInstance(document.getElementById('adminModal')).open();
+        } else { alert("Invalid Password"); }
+      });
+    }
+
+    function buildOrchestrator(schema) {
+      const sections = [...new Set(schema.map(f => f.Section))];
+      const fList = document.getElementById('fieldList');
+      fList.innerHTML = '<div class="row grey-text" style="font-weight:bold"><div class="col s6">Field</div><div class="col s4">Section</div><div class="col s2">Order</div></div>';
+      schema.sort((a,b)=>a.Label.localeCompare(b.Label)).forEach(f => {
+        fList.innerHTML += `
+          <div class="row orchestrator-row">
+            <div class="col s6">${f.Label}</div>
+            <div class="col s4"><select class="browser-default upd-sec" data-id="${f.ID}">
+              ${sections.map(s => `<option value="${s}" ${f.Section === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select></div>
+            <div class="col s2"><input type="number" class="upd-ord" value="${f.Order}" data-id="${f.ID}"></div>
+          </div>`;
+      });
+
+      const sList = document.getElementById('sectionList');
+      sList.innerHTML = sections.map(s => `
+        <div class="row orchestrator-row">
+          <div class="col s10"><strong>${s}</strong></div>
+          <div class="col s2"><button class="btn-small red" onclick="deleteSec('${s}')">Delete</button></div>
+        </div>`).join('');
+    }
+
+    function deleteSec(name) {
+      if(confirm(`Move all fields in "${name}" to Un-Grouped Data?`)) {
+        call({action: 'updateSchema', sheetId: SID, payload: {deletedSections: [name]}}, () => location.reload());
+      }
+    }
+
+    function saveSchemaChanges() {
+      const updates = Array.from(document.querySelectorAll('.upd-sec')).map(sel => {
+        const id = sel.dataset.id;
+        const ord = document.querySelector(`.upd-ord[data-id="${id}"]`).value;
+        return { ID: id, Section: sel.value, Order: parseInt(ord) };
+      });
+      document.getElementById('loader').style.display = 'flex';
+      call({action: 'updateSchema', sheetId: SID, payload: {fieldUpdates: updates}}, () => location.reload());
+    }
+
+    // --- SYSTEM ---
+    function call(data, cb) {
+      fetch(API, {method: 'POST', body: JSON.stringify(data)}).then(r => r.json()).then(cb).catch(e => stopLoader("Network Error", true));
+    }
     function setMsg(m) { document.getElementById('verboseText').innerText = m; }
-    
     function stopLoader(m, isErr = false) {
       document.getElementById('ring').style.display = isErr ? 'none' : 'block';
-      setMsg(m);
-      if(isErr) {
-        document.getElementById('verboseText').classList.add('error-text');
-        document.getElementById('retryBtn').style.display = 'block';
-      }
+      setMsg(m); if(isErr) { document.getElementById('verboseText').classList.add('error-text'); document.getElementById('retryBtn').style.display = 'block'; }
     }
-
-    function openSetup(isProv = false) {
+    function openSetup(isP = false) {
       document.getElementById('loader').style.display = 'none';
-      if(isProv) {
-        document.getElementById('stepConnect').style.display = 'none';
-        document.getElementById('stepBuild').style.display = 'block';
-        document.getElementById('setupHeader').innerText = "Provisioning Required";
-      }
+      if(isP) { document.getElementById('stepConnect').style.display = 'none'; document.getElementById('stepBuild').style.display = 'block'; }
       M.Modal.getInstance(document.getElementById('setupModal')).open();
     }
-
-    function saveSid() {
-      SID = document.getElementById('setup_sid').value.trim();
-      localStorage.setItem('pmis_v6_sid', SID);
-      location.reload();
-    }
-
-    function runDeployment() {
+    function setSid() { SID = document.getElementById('setup_sid').value.trim(); localStorage.setItem('pmis_v6_sid', SID); location.reload(); }
+    function deployNow() {
       const org = document.getElementById('setup_org').value;
       const pass = document.getElementById('setup_pass').value;
-      document.getElementById('setupModal').style.display = 'none';
+      document.getElementById('loader').style.display = 'flex'; setMsg("Provisioning...");
+      call({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload());
+    }
+    function searchData() {
+      const p = document.getElementById('pmis_in').value;
+      const d = document.getElementById('dob_in').value;
       document.getElementById('loader').style.display = 'flex';
-      setMsg("Building Architecture...");
-      callAPI({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload());
+      call({action: 'search', sheetId: SID, pmis: p, dob: d}, (res) => {
+        document.getElementById('loader').style.display = 'none';
+        if(res.error) return alert(res.error);
+        if(res.notFound) return M.toast({html: 'Not Found'});
+        Object.keys(res).forEach(k => { const i = document.getElementsByName(k)[0]; if(i) { i.value = res[k]; i.dispatchEvent(new Event('input')); }});
+        document.querySelectorAll('.atomic-btn').forEach(b => b.classList.remove('visible'));
+        M.updateTextFields();
+      });
     }
   </script>
 </body>
