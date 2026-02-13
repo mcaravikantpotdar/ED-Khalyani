@@ -2,223 +2,323 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PMIS Command v7.1 | Pro Edition</title>
+  <title>PMIS Enterprise v7.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
   <style>
-    :root { --p: #0f172a; --a: #3b82f6; --bg: #f8fafc; --card: #ffffff; }
+    :root { --p: #0f172a; --a: #3b82f6; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }
     body { background-color: var(--bg); font-family: 'Inter', sans-serif; color: #1e293b; }
     
-    /* Cinematic Symphony Loader */
+    /* Cinematic Defensive Loader */
     #loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-    .pulse { width: 60px; height: 60px; border: 4px solid #f1f5f9; border-top-color: var(--a); border-radius: 50%; animation: spin 1s infinite linear; }
+    .pulse-ring { width: 70px; height: 70px; border: 4px solid #f1f5f9; border-top-color: var(--a); border-radius: 50%; animation: spin 1s infinite linear; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    #vMsg { margin-top: 25px; font-weight: 600; color: var(--p); }
+    #vMsg { margin-top: 25px; font-weight: 600; color: var(--p); text-align: center; max-width: 85%; }
+    .error-box { background: #fee2e2; color: #b91c1c; padding: 20px; border-radius: 12px; margin-top: 20px; display: none; border: 1px solid #f87171; max-width: 400px; text-align: center; }
 
-    /* Admin UI Styles */
-    .orch-row { border-bottom: 1px solid #f1f5f9; padding: 15px 0; display: flex; align-items: center; }
-    .move-btn { cursor: pointer; color: #94a3b8; transition: 0.2s; font-size: 1.8rem; }
-    .move-btn:hover { color: var(--a); }
-    .settings-cog { cursor: pointer; color: #94a3b8; margin-left: 10px; }
-    .settings-cog:hover { color: var(--p); }
+    /* Layout & Cards */
+    .app-header { background: var(--p); color: white; padding: 40px 0; border-radius: 0 0 30px 30px; margin-bottom: 30px; position: relative; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .settings-trigger { position: absolute; top: 20px; right: 20px; cursor: pointer; opacity: 0.6; transition: 0.3s; }
+    .settings-trigger:hover { opacity: 1; transform: rotate(45deg); }
     
-    .property-drawer { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 10px; display: none; border: 1px solid #e2e8f0; width: 100%; }
-    
-    /* Layout */
-    .app-header { background: var(--p); color: white; padding: 40px 0; border-radius: 0 0 30px 30px; margin-bottom: 30px; position: relative; }
-    .section-card { background: var(--card); border-radius: 20px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-    .atomic-btn { position: absolute; right: 10px; top: 12px; opacity: 0; transform: translateX(10px); transition: 0.3s; cursor: pointer; color: var(--a); background: white; z-index: 10; }
+    .section-card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+    .section-title { font-size: 1.3rem; font-weight: 800; color: var(--p); margin-bottom: 25px; display: flex; align-items: center; }
+    .section-title i { margin-right: 12px; color: var(--a); }
+
+    /* Atomic Save Button (Slide-In) */
+    .field-wrapper { position: relative; }
+    .atomic-btn { 
+      position: absolute; right: 10px; top: 12px; opacity: 0; 
+      transform: translateX(15px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer; color: var(--a); background: white; z-index: 10;
+    }
     .atomic-btn.visible { opacity: 1; transform: translateX(0); }
+    
+    /* Orchestrator & Smart Import UI */
+    .orch-row { border-bottom: 1px solid #f1f5f9; padding: 12px 0; display: flex; align-items: center; }
+    .move-btn { cursor: pointer; color: #94a3b8; font-size: 1.8rem; transition: 0.2s; }
+    .move-btn:hover { color: var(--a); }
+    .cog-btn { cursor: pointer; color: #94a3b8; transition: 0.2s; margin-left: 10px; }
+    .cog-btn:hover { color: var(--p); }
+    .prop-drawer { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 10px; display: none; border: 1px solid #e2e8f0; width: 100%; }
+    
+    .map-row { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; align-items: center; }
     .u-case { text-transform: uppercase; }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="pulse"></div><p id="vMsg">Synchronizing Project DNA...</p></div>
+  <div id="loader">
+    <div class="pulse-ring" id="ring"></div>
+    <p id="vMsg">Initializing Project DNA...</p>
+    <div id="errorBox" class="error-box"></div>
+    <button id="retryBtn" class="btn red accent-4" style="display:none; margin-top:20px;" onclick="location.reload()">Retry Connection</button>
+  </div>
 
   <div id="adminModal" class="modal modal-fixed-footer" style="width: 95%; height: 90%; border-radius: 20px;">
     <div class="modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h4><i class="material-icons left blue-text">tune</i> Database Orchestrator</h4>
-        <button class="btn green accent-4" onclick="createNewSection()"><i class="material-icons left">add</i> New Section</button>
+      <h4><i class="material-icons left blue-text">tune</i> Database Orchestrator</h4>
+      <ul class="tabs">
+        <li class="tab col s6"><a class="active" href="#tabOrch">Field Orchestrator</a></li>
+        <li class="tab col s6"><a href="#tabImport">Smart Import</a></li>
+      </ul>
+      
+      <div id="tabOrch" style="padding-top:20px;">
+        <p class="grey-text">Use arrows to reorder. Cog to change mapping/type.</p>
+        <div id="orchList"></div>
       </div>
-      <p class="grey-text">Use arrows to reorder. Click the cog for property settings.</p>
-      <div id="orchList"></div>
+      
+      <div id="tabImport" style="padding-top:20px;">
+        <h5>Import Intelligence</h5>
+        <p>Drop your Excel file below. We will match headers automatically.</p>
+        <div class="file-field input-field">
+          <div class="btn blue"><span>Select Excel</span><input type="file" id="excelInput" accept=".xlsx, .xls"></div>
+          <div class="file-path-wrapper"><input class="file-path validate" type="text"></div>
+        </div>
+        <div id="mappingZone" style="display:none; margin-top:30px;">
+          <h6>Verify Column Mapping</h6>
+          <div id="mappingList"></div>
+          <button class="btn-large green accent-4" style="margin-top:20px; width:100%" onclick="executeImport()">Execute Bulk Import</button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="modal-close btn-flat">Close</button>
+      <button class="modal-close btn-flat">Dismiss</button>
+    </div>
+  </div>
+
+  <div id="setupModal" class="modal" style="border-radius:20px;">
+    <div class="modal-content">
+      <h4>System Handshake</h4>
+      <div id="stepConnect">
+        <div class="input-field"><input type="text" id="setup_sid"><label>Google Sheet ID</label></div>
+        <button class="btn-large blue accent-4 w100" style="width:100%" onclick="saveSID()">Connect Sheet</button>
+      </div>
+      <div id="stepBuild" style="display:none;">
+        <p>DNA Missing. Shall we provision the 78-column architecture?</p>
+        <div class="input-field"><input type="text" id="setup_org"><label>Organization Name</label></div>
+        <div class="input-field"><input type="password" id="setup_pass"><label>Admin Password</label></div>
+        <button class="btn-large green accent-4 w100" style="width:100%" onclick="runProvision()">Build Database</button>
+      </div>
     </div>
   </div>
 
   <div id="appBody" style="display:none;">
     <header class="app-header">
       <div class="container">
-        <h3 id="orgTitle" style="margin:0; font-weight:900;">Portal</h3>
-        <i class="material-icons" style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="openAdmin()">settings</i>
+        <h3 id="orgLabel" style="margin:0; font-weight:900; letter-spacing:-1px;">Portal</h3>
+        <i class="material-icons settings-trigger" onclick="openAdmin()">settings</i>
       </div>
     </header>
 
     <div class="container">
       <div class="section-card" style="margin-top:-60px; position:relative;">
         <div class="row" style="margin-bottom:0">
-          <div class="input-field col s12 m5"><input type="text" id="pmis_in"><label>PMIS CODE</label></div>
-          <div class="input-field col s12 m5"><input type="text" id="dob_in" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
-          <div class="col s12 m2"><button class="btn-large blue accent-4 w100" style="width:100%; border-radius:12px;" onclick="search()">LOAD</button></div>
+          <div class="input-field col s12 m5"><input type="text" id="p_in"><label>PMIS CODE</label></div>
+          <div class="input-field col s12 m5"><input type="text" id="d_in" placeholder="DD-MM-YYYY"><label>DATE OF BIRTH</label></div>
+          <div class="col s12 m2"><button class="btn-large blue accent-4 w100" style="width:100%; border-radius:12px;" onclick="loadEmp()">LOAD</button></div>
         </div>
       </div>
-      <div id="formContainer"></div>
+      <div id="formBody"></div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
-    // PRECISE URL BINDING
+    // --- THE MASTER URL ---
     const API = 'https://script.google.com/macros/s/AKfycbxk570Yj2DRGZcEWBB2E8BwHZOxDfO6i5TSF_NKyjso65ct2j0pbNiE5edQ-_aAyHi0sQ/exec';
     let SID = localStorage.getItem('pmis_v6_sid');
-    let MASTER_SCHEMA = [];
+    let SCHEMA_CACHE = [];
+    let EXCEL_DATA = [];
 
     window.onload = () => {
       M.Modal.init(document.querySelectorAll('.modal'), {dismissible: false});
-      if(!SID) { SID = prompt("Provide Google Sheet ID to connect:"); localStorage.setItem('pmis_v6_sid', SID); location.reload(); }
-      startup();
+      M.Tabs.init(document.querySelectorAll('.tabs'));
+      if(!SID) { openSetup(); } else { startup(); }
     };
 
     function startup() {
+      setMsg("Checking Mother Ship Connection...");
       call({action: 'checkStatus', sheetId: SID}, res => {
-        if(res.status === "NEW") provision(); else initApp();
+        if(res.error) return showError(res.error);
+        if(res.status === "NEW") { openSetup(true); } else { init(); }
       });
     }
 
-    function initApp() {
+    function init() {
+      setMsg("Rehydrating Database Schema...");
       call({action: 'init', sheetId: SID}, res => {
-        MASTER_SCHEMA = res.schema;
-        document.getElementById('orgTitle').innerText = res.settings.ORG_NAME;
-        renderMainForm(res.schema);
+        if(res.error) return showError(res.error);
+        SCHEMA_CACHE = res.schema;
+        document.getElementById('orgLabel').innerText = res.settings.ORG_NAME;
+        renderMain(res.schema);
         document.getElementById('loader').style.display = 'none';
         document.getElementById('appBody').style.display = 'block';
       });
     }
 
-    function renderMainForm(schema) {
-      const cont = document.getElementById('formContainer');
-      cont.innerHTML = '';
+    function renderMain(schema) {
+      const container = document.getElementById('formBody');
+      container.innerHTML = '';
       const sections = [...new Set(schema.map(f => f.Section))].sort();
       
       sections.forEach(sec => {
         const card = document.createElement('div');
         card.className = 'section-card';
-        card.innerHTML = `<div style="font-size:1.4rem; font-weight:800; margin-bottom:20px; color:var(--p)">${sec}</div><div class="row"></div>`;
+        card.innerHTML = `<div class="section-title"><i class="material-icons">folder</i> ${sec}</div><div class="row"></div>`;
         const row = card.querySelector('.row');
         schema.filter(f => f.Section === sec).sort((a,b)=>a.Order-b.Order).forEach(f => {
           row.innerHTML += `
-            <div class="input-field col s12 m4" style="position:relative">
-              <input type="text" name="${f.ID}" class="u-case d-in"><label>${f.Label}</label>
-              <i class="material-icons atomic-btn" onclick="save(this)">save</i>
+            <div class="input-field col s12 m4 field-wrapper">
+              <input type="text" name="${f.ID}" class="u-case d-input"><label>${f.Label}</label>
+              <i class="material-icons atomic-btn" onclick="saveAtomic(this)">save</i>
             </div>`;
         });
-        cont.appendChild(card);
+        container.appendChild(card);
       });
       M.updateTextFields();
-      document.querySelectorAll('.d-in').forEach(i => i.oninput = (e) => e.target.parentElement.querySelector('.atomic-btn').classList.add('visible'));
+      document.querySelectorAll('.d-input').forEach(i => i.oninput = (e) => e.target.parentElement.querySelector('.atomic-btn').classList.add('visible'));
     }
 
-    // --- 360° ADMIN ORCHESTRATOR ---
+    // --- SMART IMPORT LOGIC ---
+    document.getElementById('excelInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        EXCEL_DATA = XLSX.utils.sheet_to_json(sheet);
+        if(EXCEL_DATA.length > 0) buildMapper(Object.keys(EXCEL_DATA[0]));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function buildMapper(headers) {
+      const list = document.getElementById('mappingList');
+      list.innerHTML = '';
+      document.getElementById('mappingZone').style.display = 'block';
+      headers.forEach(h => {
+        const match = SCHEMA_CACHE.find(f => f.Label.toLowerCase() === h.toLowerCase());
+        list.innerHTML += `
+          <div class="map-row row">
+            <div class="col s5"><strong>${h}</strong></div>
+            <div class="col s1"><i class="material-icons">arrow_forward</i></div>
+            <div class="col s6">
+              <select class="browser-default map-sel" data-xl="${h}">
+                <option value="">-- Ignore --</option>
+                ${SCHEMA_CACHE.map(f => `<option value="${f.ID}" ${match && match.ID === f.ID ? 'selected' : ''}>${f.Label}</option>`).join('')}
+              </select>
+            </div>
+          </div>`;
+      });
+    }
+
+    function executeImport() {
+      const mappings = Array.from(document.querySelectorAll('.map-sel'));
+      const payload = EXCEL_DATA.map(row => {
+        let clean = {};
+        mappings.forEach(sel => { if(sel.value) clean[sel.value] = row[sel.dataset.xl]; });
+        return clean;
+      });
+      document.getElementById('loader').style.display = 'flex';
+      setMsg("Importing Records...");
+      call({action: 'importData', sheetId: SID, payload: payload}, res => {
+        if(res.success) { alert(`Imported ${res.count} records!`); location.reload(); }
+      });
+    }
+
+    // --- ADMIN ORCHESTRATOR ---
     function openAdmin() {
       const pass = prompt("Enter Admin Security Key:");
       call({action: 'init', sheetId: SID}, res => {
         if(String(pass) === String(res.settings.ADMIN_PASSWORD)) {
-          buildOrchestrator();
+          buildOrch();
           M.Modal.getInstance(document.getElementById('adminModal')).open();
-        } else alert("Invalid Key");
+        } else alert("Denied.");
       });
     }
 
-    function buildOrchestrator() {
+    function buildOrch() {
       const list = document.getElementById('orchList');
       list.innerHTML = '';
-      const sections = [...new Set(MASTER_SCHEMA.map(f => f.Section))];
-      
-      MASTER_SCHEMA.sort((a,b) => a.Order - b.Order).forEach((f, idx) => {
+      const sections = [...new Set(SCHEMA_CACHE.map(f => f.Section))];
+      SCHEMA_CACHE.sort((a,b) => a.Order - b.Order).forEach((f, idx) => {
         const row = document.createElement('div');
         row.className = 'orch-row row';
         row.innerHTML = `
-          <div class="col s1 center-align">
-            <i class="material-icons move-btn" onclick="moveElement('up', ${idx})">expand_less</i>
-            <i class="material-icons move-btn" onclick="moveElement('down', ${idx})">expand_more</i>
-          </div>
+          <div class="col s1"><i class="material-icons move-btn" onclick="move('up', ${idx})">expand_less</i><i class="material-icons move-btn" onclick="move('down', ${idx})">expand_more</i></div>
           <div class="col s5"><strong>${f.Label}</strong></div>
           <div class="col s4 blue-text">${f.Section}</div>
-          <div class="col s2 center-align">
-            <i class="material-icons settings-cog" onclick="togglePropertyDrawer('${f.ID}')">settings</i>
-          </div>
-          <div class="property-drawer col s12" id="drawer_${f.ID.replace(/\s/g,'')}">
-            <div class="row" style="margin-bottom:0">
-              <div class="col s6">
-                <label>Move to Section</label>
-                <select class="browser-default" id="sec_${f.ID.replace(/\s/g,'')}">
-                  ${sections.map(s => `<option value="${s}" ${f.Section === s ? 'selected':''}>${s}</option>`).join('')}
-                </select>
-              </div>
-              <div class="col s6">
-                <label>Data Property</label>
-                <select class="browser-default" id="typ_${f.ID.replace(/\s/g,'')}">
-                  <option value="TEXT" ${f.Type === 'TEXT'?'selected':''}>Standard Text</option>
-                  <option value="DATE" ${f.Type === 'DATE'?'selected':''}>Date Format</option>
-                  <option value="DROPDOWN" ${f.Type === 'DROPDOWN'?'selected':''}>Dropdown List</option>
-                </select>
-              </div>
-              <div class="col s12" style="margin-top:15px">
-                <button class="btn blue darken-2" onclick="updateFieldProperties('${f.ID}')">Sync Properties</button>
-              </div>
-            </div>
-          </div>
-        `;
+          <div class="col s2 center-align"><i class="material-icons cog-btn" onclick="toggleDrawer('${f.ID}')">settings</i></div>
+          <div class="prop-drawer col s12" id="dr_${f.ID.replace(/\W/g,'')}">
+             <div class="row">
+               <div class="col s6"><label>Section</label><select class="browser-default" id="s_${f.ID.replace(/\W/g,'')}">${sections.map(s => `<option value="${s}" ${f.Section===s?'selected':''}>${s}</option>`).join('')}</select></div>
+               <div class="col s6"><label>Type</label><select class="browser-default" id="t_${f.ID.replace(/\W/g,'')}"><option value="TEXT" ${f.Type==='TEXT'?'selected':''}>Text</option><option value="DATE" ${f.Type==='DATE'?'selected':''}>Date</option></select></div>
+               <div class="col s12 mt10"><button class="btn blue" onclick="syncField('${f.ID}')">Update</button></div>
+             </div>
+          </div>`;
         list.appendChild(row);
       });
     }
 
-    function moveElement(dir, idx) {
+    function move(dir, idx) {
       const target = dir === 'up' ? idx - 1 : idx + 1;
-      if(target < 0 || target >= MASTER_SCHEMA.length) return;
+      if(target < 0 || target >= SCHEMA_CACHE.length) return;
       document.getElementById('loader').style.display = 'flex';
-      call({action: 'swapOrder', sheetId: SID, idA: MASTER_SCHEMA[idx].ID, idB: MASTER_SCHEMA[target].ID}, () => location.reload());
+      call({action: 'swapOrder', sheetId: SID, idA: SCHEMA_CACHE[idx].ID, idB: SCHEMA_CACHE[target].ID}, () => location.reload());
     }
 
-    function togglePropertyDrawer(id) {
-      const d = document.getElementById('drawer_' + id.replace(/\s/g,''));
+    function toggleDrawer(id) {
+      const d = document.getElementById('dr_' + id.replace(/\W/g,''));
       d.style.display = d.style.display === 'block' ? 'none' : 'block';
     }
 
-    function createNewSection() {
-      const name = prompt("Enter New Section Name:");
-      if(!name) return;
-      // Section is created when the first field is mapped to it.
-      alert(`Section "${name}" prepared. Use the Settings Cog on any field to map it here.`);
+    function syncField(id) {
+      const sec = document.getElementById('s_' + id.replace(/\W/g,'')).value;
+      const typ = document.getElementById('t_' + id.replace(/\W/g,'')).value;
+      call({action: 'updateField', sheetId: SID, payload: {ID: id, Section: sec, Type: typ, Order: SCHEMA_CACHE.find(f => f.ID === id).Order}}, () => location.reload());
     }
 
-    function updateFieldProperties(id) {
-      const sec = document.getElementById('sec_' + id.replace(/\s/g,'')).value;
-      const typ = document.getElementById('typ_' + id.replace(/\s/g,'')).value;
-      const field = MASTER_SCHEMA.find(f => f.ID === id);
-      call({action: 'updateField', sheetId: SID, payload: {ID: id, Section: sec, Type: typ, Order: field.Order}}, () => location.reload());
+    // --- UTILS ---
+    function call(d, cb) { fetch(API, {method: 'POST', body: JSON.stringify(d)}).then(r => r.json()).then(cb).catch(e => showError("Signal Lost.")); }
+    function setMsg(m) { document.getElementById('vMsg').innerText = m; }
+    function showError(m) { 
+      document.getElementById('ring').style.display = 'none';
+      document.getElementById('vMsg').style.display = 'none';
+      document.getElementById('errorBox').innerText = m;
+      document.getElementById('errorBox').style.display = 'block';
+      document.getElementById('retryBtn').style.display = 'block';
     }
-
-    // --- SYSTEM CORE ---
-    function call(d, cb) { fetch(API, {method: 'POST', body: JSON.stringify(d)}).then(r => r.json()).then(cb).catch(e => alert("Connection Lost")); }
-    function provision() { const org = prompt("Org Name?"); const pass = prompt("Admin Password?"); call({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload()); }
-    function search() {
-      call({action: 'search', sheetId: SID, pmis: document.getElementById('pmis_in').value, dob: document.getElementById('dob_in').value}, res => {
-        if(res.notFound) return M.toast({html: 'No record found'});
+    function openSetup(isP = false) {
+      document.getElementById('loader').style.display = 'none';
+      if(isP) { document.getElementById('stepConnect').style.display = 'none'; document.getElementById('stepBuild').style.display = 'block'; }
+      M.Modal.getInstance(document.getElementById('setupModal')).open();
+    }
+    function saveSID() { localStorage.setItem('pmis_v6_sid', document.getElementById('setup_sid').value); location.reload(); }
+    function runProvision() {
+      const org = document.getElementById('setup_org').value;
+      const pass = document.getElementById('setup_pass').value;
+      document.getElementById('loader').style.display = 'flex';
+      call({action: 'provision', sheetId: SID, orgName: org, password: pass}, () => location.reload());
+    }
+    function loadEmp() {
+      const p = document.getElementById('p_in').value;
+      const d = document.getElementById('d_in').value;
+      call({action: 'search', sheetId: SID, pmis: p, dob: d}, res => {
+        if(res.notFound) return M.toast({html: 'No record.'});
         Object.keys(res).forEach(k => { const i = document.getElementsByName(k)[0]; if(i) { i.value = res[k]; i.dispatchEvent(new Event('input')); }});
       });
     }
-    function save(btn) {
-      const input = btn.parentElement.querySelector('input');
-      call({action: 'atomicSave', sheetId: SID, pmis: document.getElementById('pmis_in').value, fieldName: input.name, newValue: input.value.toUpperCase()}, () => {
+    function saveAtomic(btn) {
+      const i = btn.parentElement.querySelector('input');
+      call({action: 'atomicSave', sheetId: SID, pmis: document.getElementById('p_in').value, fieldName: i.name, newValue: i.value.toUpperCase()}, () => {
         btn.innerHTML = 'check_circle'; btn.style.color = 'green';
         setTimeout(() => btn.classList.remove('visible'), 2000);
       });
