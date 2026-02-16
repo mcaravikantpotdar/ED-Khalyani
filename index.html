@@ -21,17 +21,19 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .header-controls { display: flex; align-items: center; gap: 12px; }
+        .header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         
-        .pmis-input-wrapper { display: flex; align-items: center; background: #f1f3f4; border-radius: 4px; padding: 4px 8px; border: 1px solid var(--border); }
-        .pmis-input-wrapper label { font-size: 0.8rem; font-weight: bold; margin-right: 8px; color: var(--text-secondary); }
+        .pmis-input-wrapper { display: flex; align-items: center; background: #f1f3f4; border-radius: 4px; padding: 4px 8px; border: 1px solid var(--border); transition: border 0.3s; }
+        .pmis-input-wrapper.invalid { border-color: var(--error); background: #fdf2f2; }
+        .pmis-input-wrapper label { font-size: 0.75rem; font-weight: bold; margin-right: 8px; color: var(--text-secondary); }
         .pmis-box {
-            border: none; background: transparent; font-weight: bold; width: 80px; 
+            border: none; background: transparent; font-weight: bold; width: 85px; 
             text-align: center; font-size: 1rem; color: var(--primary); outline: none;
         }
 
-        .btn-load { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-        .btn-load:hover { opacity: 0.9; }
+        .btn-load { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn-load:hover { background: #1557b0; }
+        .btn-load:disabled { background: #ccc; cursor: not-allowed; }
 
         /* --- STICKY NAV --- */
         .nav-bar {
@@ -54,29 +56,33 @@
         input, select, textarea {
             padding: 12px; border: 1px solid var(--border); border-radius: 4px;
             font-size: 1rem; width: 100%; box-sizing: border-box; outline: none;
-            text-transform: uppercase; transition: border 0.2s;
+            text-transform: uppercase; transition: all 0.2s;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        input.invalid { border-color: var(--error); background-color: #fff8f8; }
         input[readonly] { background: #f1f3f4; cursor: not-allowed; color: #5f6368; }
 
-        /* --- ATOMIC STATUS ICONS --- */
+        .error-hint { font-size: 0.7rem; color: var(--error); margin-top: 4px; display: none; font-weight: 500; }
+        input.invalid + .error-hint { display: block; }
+
+        /* --- STATUS ICONS --- */
         .atomic-status {
             position: absolute; right: -32px; top: 36px; width: 24px; height: 24px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             font-size: 1.1rem;
         }
-        .atomic-status.dirty { color: var(--primary); }
+        .atomic-status.dirty { color: var(--primary); opacity: 1; }
         .atomic-status.saving { color: orange; animation: spin 1s infinite linear; }
         .atomic-status.synced { color: var(--success); }
+        .atomic-status.error { color: var(--error); }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- RESPONSIVE --- */
         @media (max-width: 850px) {
             .form-grid { grid-template-columns: 1fr; }
-            .atomic-status { right: 8px; top: 8px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); width: 20px; height: 20px; font-size: 0.9rem; }
+            .atomic-status { right: 8px; top: 8px; background: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.9rem; }
             .sticky-header { flex-direction: column; padding: 10px; gap: 10px; }
-            .nav-bar { top: 105px; }
+            .nav-bar { top: 140px; }
         }
     </style>
 </head>
@@ -84,11 +90,15 @@
 
 <div class="sticky-header">
     <div class="header-controls">
-        <div class="pmis-input-wrapper">
+        <div class="pmis-input-wrapper" id="pmis_wrap">
             <label>PMIS CODE</label>
-            <input type="text" id="global_pmis" class="pmis-box" placeholder="REQUIRED">
+            <input type="text" id="global_pmis" class="pmis-box" maxlength="6" placeholder="6 DIGITS" oninput="this.value=this.value.replace(/\D/g,'')">
         </div>
-        <button class="btn-load" onclick="loadEmployeeData()">LOAD DATA</button>
+        <div class="pmis-input-wrapper" id="dob_wrap">
+            <label>D.O.B.</label>
+            <input type="text" id="auth_dob" class="pmis-box" style="width: 110px;" placeholder="DD-MM-YYYY" oninput="maskDate(this)">
+        </div>
+        <button class="btn-load" id="loadBtn" onclick="loadEmployeeData()">AUTHENTICATE & LOAD</button>
     </div>
     <div id="statusIndicator" style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary);">READY</div>
 </div>
@@ -108,181 +118,182 @@
     <section id="section1">
         <h2>I. Personal Profile</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Full Name</label><input type="text" id="Full Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Gender</label><select id="Gender" onchange="handleInput(this)"><option value="">SELECT</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option><option value="OTHER">OTHER</option></select><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Designation</label><input type="text" id="Designation" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>PMIS Code</label><input type="text" id="PMIS Code" readonly></div>
-            <div class="field-group"><label>Date of Birth</label><input type="text" id="D.O.B." oninput="maskDate(this); handleInput(this)" placeholder="DD-MM-YYYY"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Social Category</label><select id="Social Category" onchange="handleInput(this)"><option value="">SELECT</option><option value="GENERAL">GENERAL</option><option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option></select><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Blood Group</label><select id="Blood Group" onchange="handleInput(this)"><option value="">SELECT</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option></select><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Identification Mark</label><input type="text" id="Identification Mark" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group">
+                <label>Full Name</label>
+                <input type="text" id="Full Name" data-type="name" onblur="validateAndSave(this)">
+                <span class="error-hint">Only letters and spaces allowed</span>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Gender</label>
+                <select id="Gender" onchange="validateAndSave(this)"><option value="">SELECT</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Designation</label>
+                <input type="text" id="Designation" data-type="text" onblur="validateAndSave(this)">
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>PMIS Code</label>
+                <input type="text" id="PMIS Code" readonly>
+            </div>
+            <div class="field-group">
+                <label>Date of Birth</label>
+                <input type="text" id="D.O.B." data-type="date" oninput="maskDate(this)" onblur="validateAndSave(this)" placeholder="DD-MM-YYYY">
+                <span class="error-hint">Format: DD-MM-YYYY</span>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Social Category</label>
+                <select id="Social Category" onchange="validateAndSave(this)"><option value="">SELECT</option><option value="GENERAL">GENERAL</option><option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option></select>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Blood Group</label>
+                <select id="Blood Group" onchange="validateAndSave(this)"><option value="">SELECT</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option></select>
+                <div class="atomic-status"></div>
+            </div>
         </div>
     </section>
 
-    <!-- II. IDENTITY & CONTACT -->
+    <!-- II. IDENTITY -->
     <section id="section2">
         <h2>II. Identity & Contact</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Aadhaar Number</label><input type="text" id="Aadhaar Number" oninput="maskAadhaar(this); handleInput(this)" placeholder="0000 0000 0000"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>PAN Number</label><input type="text" id="PAN Number" oninput="handleInput(this)" maxlength="10" placeholder="AAAAA0000A"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>IP-Number</label><input type="text" id="IP-Number" oninput="handleInput(this)" placeholder="IP00-00000"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>GPF / PRAN No</label><input type="text" id="GPF / PRAN No" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Personal Contact No.</label><input type="text" id="Personal Contact No." oninput="maskMobile(this); handleInput(this)" placeholder="00000-00000"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>WhatsApp No.</label><input type="text" id="WhatsApp No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Alternate Contact No.</label><input type="text" id="Alternate Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Emergency Contact No.</label><input type="text" id="Emergency Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Email ID</label><input type="email" id="Email ID" oninput="handleInput(this)" style="text-transform: lowercase;"><div class="atomic-status"></div></div>
+            <div class="field-group">
+                <label>Aadhaar Number</label>
+                <input type="text" id="Aadhaar Number" data-type="aadhaar" oninput="maskAadhaar(this)" onblur="validateAndSave(this)" placeholder="0000 0000 0000">
+                <span class="error-hint">Requires 12 digits</span>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>PAN Number</label>
+                <input type="text" id="PAN Number" data-type="pan" maxlength="10" onblur="validateAndSave(this)" placeholder="AAAAA1111A">
+                <span class="error-hint">Invalid PAN Format (AAAAA0000A)</span>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Personal Contact No.</label>
+                <input type="text" id="Personal Contact No." data-type="mobile" oninput="maskMobile(this)" onblur="validateAndSave(this)" placeholder="00000-00000">
+                <span class="error-hint">Requires 10 digits</span>
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>Email ID</label>
+                <input type="text" id="Email ID" data-type="email" style="text-transform: lowercase;" onblur="validateAndSave(this)" placeholder="example@mail.com">
+                <span class="error-hint">Invalid email address</span>
+                <div class="atomic-status"></div>
+            </div>
         </div>
     </section>
 
-    <!-- III. FAMILY & ADDRESS -->
-    <section id="section3">
-        <h2>III. Family & Address</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Father's Name</label><input type="text" id="Father's Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Father's Contact No.</label><input type="text" id="Father's Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Mother's Name</label><input type="text" id="Mother's Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Mother's Contact No.</label><input type="text" id="Mother's Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Name of Spouse</label><input type="text" id="Name of Spouse" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Contact No. of Spouse</label><input type="text" id="Contact No. of Spouse" oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Permanent Address</label><textarea id="Permanent Address" oninput="handleInput(this)" rows="2"></textarea><div class="atomic-status"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Present Address</label><textarea id="Present Address" oninput="handleInput(this)" rows="2"></textarea><div class="atomic-status"></div></div>
-            <div class="field-group"><label>LTC Home Town</label><input type="text" id="LTC Home Town" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-        </div>
-    </section>
-
-    <!-- IV. BANKING -->
+    <!-- IV. FINANCE -->
     <section id="section4">
-        <h2>IV. Banking & Financials</h2>
+        <h2>IV. Finance</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Salary Account Number</label><input type="text" id="Salary Account Number" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>IFSC Number</label><input type="text" id="IFSC Number" oninput="handleInput(this)" placeholder="AAAA0000000"><div class="atomic-status"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Bank Name and Branch</label><input type="text" id="Bank Name and Branch" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group">
+                <label>Salary Account Number</label>
+                <input type="text" id="Salary Account Number" data-type="number" onblur="validateAndSave(this)">
+                <div class="atomic-status"></div>
+            </div>
+            <div class="field-group">
+                <label>IFSC Number</label>
+                <input type="text" id="IFSC Number" data-type="ifsc" maxlength="11" onblur="validateAndSave(this)" placeholder="ABCD0123456">
+                <span class="error-hint">Format: ABCD0123456 (11 chars)</span>
+                <div class="atomic-status"></div>
+            </div>
         </div>
     </section>
 
-    <!-- V. ACADEMIC -->
-    <section id="section5">
-        <h2>V. Academic & Professional</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Matric Board</label><input type="text" id="Matric Board" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Matric Passing Date</label><input type="text" id="Matriculation Passing Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Matriculation (Marks Obtained/Total Marks)</label><input type="text" id="Matriculation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            
-            <div class="field-group"><label>10+2 Board</label><input type="text" id="10+2 Board" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>10+2 Stream</label><input type="text" id="10+2 Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>10+2 Passing Date</label><input type="text" id="10+2 Passing Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>10+2 (Marks Obtained/Total Marks)</label><input type="text" id="10+2 (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-
-            <div class="field-group"><label>Graduation Stream</label><input type="text" id="Graduation Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Graduation – Main Subject(s)</label><input type="text" id="Graduation – Main Subject(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Graduation Completion Date</label><input type="text" id="Graduation Completion Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Graduation (Marks Obtained/Total Marks)</label><input type="text" id="Graduation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-
-            <div class="field-group"><label>PG Stream</label><input type="text" id="Post-Graduation Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>PG – Main Subject(s)</label><input type="text" id="Post-Graduation – Main Subject(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>PG Completion Date</label><input type="text" id="Post-Graduation Completion Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>PG (Marks Obtained/Total Marks)</label><input type="text" id="Post-Graduation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            
-            <div class="field-group"><label>B. Ed. Qualified?</label><select id="B. Ed. Qualified?" onchange="handleInput(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status"></div></div>
-            <div class="field-group"><label>If B.Ed. is qualified (Marks)</label><input type="text" id="If B.Ed. is qualified (Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Date of B.Ed.</label><input type="text" id="Date of B.Ed." oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-
-            <div class="field-group"><label>T.E.T. Qualified?</label><select id="T.E.T. Qualified?" onchange="handleInput(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status"></div></div>
-            <div class="field-group"><label>If T.E.T. is qualified (Marks)</label><input type="text" id="If T.E.T. is qualified (Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Date of T.E.T.</label><input type="text" id="Date of T.E.T." oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-
-            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><input type="text" id="Any other Qualification(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-        </div>
-    </section>
-
-    <!-- VI. SERVICE -->
-    <section id="section6">
-        <h2>VI. Service History</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Date of First Appointment</label><input type="text" id="Date of First Appointment" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Appointment Type</label><input type="text" id="Appointment Type" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Designation (1st Appt)</label><input type="text" id="Designation as per 1st appointment" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Date of Joining (1st Appt)</label><input type="text" id="Date of Joining as per 1st Appointment" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Place / Station of Joining (1st Appt)</label><input type="text" id="Place / Station of Joining as per 1st Appointment" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Date of Regularisation</label><input type="text" id="Date of Regularisation" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Designation after Regularisation</label><input type="text" id="Designation after Regularisation" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Date of Promotion</label><input type="text" id="Date of Promotion" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Designation after Promotion</label><input type="text" id="Designation after Promotion" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Place / Station of Joining after Promotion</label><input type="text" id="Place / Station of Joining after Promotion" oninput="handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group"><label>Retirement Date</label><input type="text" id="Retirement Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Remarks</label><textarea id="Remarks" oninput="handleInput(this)"></textarea><div class="atomic-status"></div></div>
-        </div>
-    </section>
 </div>
 
 <script>
     const SURL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
 
-    // --- LOADING LOGIC ---
+    const VALIDATION_RULES = {
+        name: /^[A-Z\s.]{2,50}$/i,
+        date: /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-(19|20)\d\d$/,
+        aadhaar: /^\d{4}\s\d{4}\s\d{4}$/,
+        mobile: /^\d{5}-\d{5}$/,
+        pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i,
+        ifsc: /^[A-Z]{4}0[A-Z0-9]{6}$/i,
+        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        number: /^\d+$/
+    };
+
+    // --- AUTHENTICATION & LOADING ---
     async function loadEmployeeData() {
         const pmis = document.getElementById('global_pmis').value;
+        const dob = document.getElementById('auth_dob').value;
+        const btn = document.getElementById('loadBtn');
         const status = document.getElementById('statusIndicator');
-        if (!pmis) return alert("Please enter PMIS Code");
 
-        status.innerText = "LOADING...";
+        if (pmis.length !== 6) return alert("PMIS must be 6 digits.");
+        if (!VALIDATION_RULES.date.test(dob)) return alert("Invalid D.O.B format.");
+
+        btn.disabled = true;
+        status.innerText = "AUTHENTICATING...";
         status.style.color = "orange";
 
         try {
             const response = await fetch(SURL, {
                 method: "POST",
-                body: JSON.stringify({ action: "fetchRecord", pmisCode: pmis })
+                body: JSON.stringify({ action: "fetchRecord", pmisCode: pmis, dob: dob })
             });
             const data = await response.json();
 
             if (data.status === "found") {
-                // Populate all fields that match sheet headers
                 Object.keys(data).forEach(key => {
                     const el = document.getElementById(key);
-                    if (el) {
-                        el.value = data[key];
-                        // Update PMIS code field specifically if found
-                        if (key === "PMIS Code") el.value = data[key];
-                    }
+                    if (el) el.value = data[key];
                 });
                 status.innerText = "RECORD LOADED";
                 status.style.color = "var(--success)";
             } else {
-                status.innerText = "NOT FOUND";
+                status.innerText = "AUTH FAILED";
                 status.style.color = "var(--error)";
-                alert("Employee with PMIS Code " + pmis + " not found.");
+                alert(data.message || "Record not found or authentication failed.");
             }
         } catch (e) {
-            status.innerText = "LOAD ERROR";
+            status.innerText = "NETWORK ERROR";
             console.error(e);
+        } finally {
+            btn.disabled = false;
         }
     }
 
-    // --- ATOMIC SAVING LOGIC ---
-    let saveTimeout = null;
+    // --- VALIDATION & SAVING LOGIC ---
+    function validateAndSave(el) {
+        const type = el.getAttribute('data-type');
+        const val = el.value.trim();
+        const icon = el.closest('.field-group').querySelector('.atomic-status');
 
-    function handleInput(el) {
-        const container = el.closest('.field-group');
-        const icon = container.querySelector('.atomic-status');
-        
-        icon.innerText = "💾";
-        icon.className = "atomic-status dirty";
+        if (val === "") {
+            el.classList.remove('invalid');
+            return; 
+        }
 
-        // Auto-save after 1.5 seconds of no typing
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            performAtomicSave(el, icon);
-        }, 1500);
+        // Run RegEx check
+        let isValid = true;
+        if (type && VALIDATION_RULES[type]) {
+            isValid = VALIDATION_RULES[type].test(val);
+        }
 
-        // Also allow manual save by clicking floppy
-        icon.onclick = () => performAtomicSave(el, icon);
+        if (!isValid) {
+            el.classList.add('invalid');
+            icon.innerText = "❌";
+            icon.className = "atomic-status error";
+            return;
+        }
+
+        el.classList.remove('invalid');
+        performAtomicSave(el, icon);
     }
 
     async function performAtomicSave(inputEl, iconEl) {
-        if (!iconEl.classList.contains('dirty')) return;
-
         const pmis = document.getElementById('global_pmis').value;
-        if (!pmis) return;
+        if (!pmis || pmis.length !== 6) return;
 
         iconEl.innerText = "⏳";
         iconEl.className = "atomic-status saving";
@@ -295,23 +306,24 @@
         };
 
         try {
-            // no-cors mode means we won't see the response body, but the data will arrive
             await fetch(SURL, {
                 method: "POST",
                 mode: "no-cors",
                 body: JSON.stringify(payload)
             });
 
-            // Assume success after short delay since no-cors gives no feedback
+            // Brief delay for visual confirmation
             setTimeout(() => {
                 iconEl.innerText = "✅";
                 iconEl.className = "atomic-status synced";
-                setTimeout(() => { iconEl.innerText = ""; iconEl.className = "atomic-status"; }, 2000);
-            }, 800);
+                setTimeout(() => { 
+                    if (iconEl.className === "atomic-status synced") iconEl.innerText = ""; 
+                }, 2000);
+            }, 500);
 
         } catch (e) {
             iconEl.innerText = "❌";
-            console.error(e);
+            iconEl.className = "atomic-status error";
         }
     }
 
@@ -322,18 +334,25 @@
         if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
         el.value = v;
     }
-
     function maskMobile(el) {
         let v = el.value.replace(/\D/g, '').slice(0, 10);
         if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
         el.value = v;
     }
-
     function maskAadhaar(el) {
         let v = el.value.replace(/\D/g, '').slice(0, 12);
         let m = v.match(/.{1,4}/g);
         el.value = m ? m.join(' ') : v;
     }
+
+    // Block keyboard inputs that violate data types
+    document.querySelectorAll('input[data-type="name"]').forEach(el => {
+        el.onkeypress = (e) => { if (!/[a-zA-Z\s.]/.test(e.key)) e.preventDefault(); };
+    });
+    document.querySelectorAll('input[data-type="number"]').forEach(el => {
+        el.onkeypress = (e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); };
+    });
+
 </script>
 </body>
 </html>
