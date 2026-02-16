@@ -1,206 +1,417 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <base target="_top">
-  <style>
-    :root {
-      --primary: #1a73e8;
-      --success: #34a853;
-      --error: #ea4335;
-      --bg: #f8f9fa;
-      --text: #3c4043;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMIS Employee Update System</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --success: #34a853;
+            --error: #ea4335;
+            --bg: #f1f3f4;
+            --card-bg: #ffffff;
+            --text-main: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    }
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            margin: 0; padding: 0; background-color: var(--bg); color: var(--text-main);
+            scroll-behavior: smooth;
+        }
 
-    /* --- STICKY HEADER --- */
-    .header {
-      position: sticky; top: 0; z-index: 1000;
-      background: white; border-bottom: 1px solid #dadce0;
-      padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+        /* --- STICKY HEADER --- */
+        .sticky-header {
+            position: sticky; top: 0; z-index: 1000;
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
 
-    .btn-global-save {
-      background: var(--primary); color: white; border: none;
-      padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;
-    }
+        .header-info { display: flex; flex-direction: column; }
+        .header-info span { font-size: 0.8rem; color: var(--text-secondary); }
+        .header-info strong { font-size: 1.1rem; }
 
-    /* --- NAVIGATION --- */
-    .nav-bar {
-      position: sticky; top: 60px; z-index: 999;
-      background: #fff; border-bottom: 1px solid #ddd;
-      overflow-x: auto; white-space: nowrap; display: flex;
-    }
+        .btn-global-save {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 24px; border-radius: 4px; cursor: pointer;
+            font-weight: 500; font-size: 0.9rem; transition: background 0.2s;
+        }
+        .btn-global-save:hover { background: #1765cc; }
 
-    .nav-item {
-      padding: 15px 20px; text-decoration: none; color: #5f6368; font-weight: 500;
-    }
+        /* --- STICKY NAV --- */
+        .nav-bar {
+            position: sticky; top: 65px; z-index: 999;
+            background: white; border-bottom: 1px solid var(--border);
+            display: flex; overflow-x: auto; white-space: nowrap; padding: 0 15px;
+        }
+        .nav-item {
+            padding: 15px 20px; text-decoration: none; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 500; border-bottom: 3px solid transparent;
+        }
+        .nav-item:hover { color: var(--primary); }
+        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .nav-item:hover { color: var(--primary); }
+        /* --- MAIN LAYOUT --- */
+        .content-wrapper { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
 
-    /* --- FORM LAYOUT --- */
-    .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        section {
+            background: var(--card-bg); border-radius: 8px; padding: 30px;
+            margin-bottom: 40px; border: 1px solid var(--border);
+        }
 
-    section { 
-      background: white; border-radius: 8px; padding: 25px; 
-      margin-bottom: 30px; border: 1px solid #dadce0;
-    }
+        h2 { margin-top: 0; margin-bottom: 25px; color: var(--primary); font-size: 1.4rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 
-    h2 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px;
+        }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field-group { position: relative; display: flex; flex-direction: column; }
 
-    .field-group { position: relative; display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
 
-    label { font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input, select, textarea {
+            padding: 12px; border: 1px solid var(--border); border-radius: 4px;
+            font-size: 1rem; width: 100%; box-sizing: border-box;
+            outline: none; transition: border-color 0.2s;
+            text-transform: uppercase; /* Force visual uppercase */
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
 
-    input, select, textarea {
-      padding: 10px; border: 1px solid #dadce0; border-radius: 4px;
-      font-size: 1rem; width: 100%; box-sizing: border-box; text-transform: uppercase;
-    }
+        input[readonly] { background-color: #f8f9fa; cursor: not-allowed; }
 
-    textarea { height: 80px; resize: vertical; }
+        /* --- ATOMIC FLOOPY/TICK --- */
+        .atomic-status {
+            position: absolute; right: -30px; top: 35px;
+            width: 24px; height: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; transition: transform 0.2s;
+        }
+        .atomic-status.dirty { display: flex; color: var(--primary); }
+        .atomic-status.saving { color: orange; animation: spin 1s infinite linear; }
+        .atomic-status.synced { color: var(--success); cursor: default; }
 
-    /* --- ATOMIC ICONS --- */
-    .status-icon {
-      position: absolute; right: -25px; top: 32px;
-      cursor: pointer; font-size: 1.2rem; display: none;
-    }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .status-icon.floppy { display: block; color: var(--primary); }
-    .status-icon.tick { display: block; color: var(--success); cursor: default; }
+        /* --- QUALIFICATION TOGGLES --- */
+        .qual-row { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; background: #fbfbfb; padding: 15px; border-radius: 6px; }
+        .switch-group { display: flex; align-items: center; gap: 15px; }
+        .switch-group span { font-weight: bold; font-size: 0.8rem; }
 
-    /* --- MOBILE RESPONSIVE --- */
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: 1fr; }
-      .container { margin-top: 10px; }
-      .status-icon { right: 10px; top: 10px; background: white; border-radius: 50%; }
-    }
-  </style>
+        /* --- RESPONSIVE --- */
+        @media (max-width: 850px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .qual-row { grid-template-columns: 1fr; grid-column: span 1; }
+            .atomic-status { right: 5px; top: 10px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        }
+    </style>
 </head>
 <body>
 
-<div class="header">
-  <div><strong>PMIS:</strong> <span id="displayPmis">123456</span></div>
-  <button class="btn-global-save" onclick="saveAll()">SAVE / UPDATE ALL</button>
+<div class="sticky-header">
+    <div class="header-info">
+        <span id="headerLabel">Editing Profile for</span>
+        <strong id="headerUser">LOADED_NAME | PMIS: <span id="headerPmis">000000</span></strong>
+    </div>
+    <button class="btn-global-save" onclick="saveAllDirty()">SAVE ALL CHANGES</button>
 </div>
 
-<div class="nav-bar">
-  <a href="#sec1" class="nav-item">Profile</a>
-  <a href="#sec2" class="nav-item">Identity/Contact</a>
-  <a href="#sec3" class="nav-item">Family</a>
-  <a href="#sec4" class="nav-item">Finance</a>
-  <a href="#sec5" class="nav-item">Academic</a>
-  <a href="#sec6" class="nav-item">Service</a>
+<div class="nav-bar" id="navBar">
+    <a href="#section1" class="nav-item">Personal Profile</a>
+    <a href="#section2" class="nav-item">Identity & Contact</a>
+    <a href="#section3" class="nav-item">Family & Address</a>
+    <a href="#section4" class="nav-item">Banking</a>
+    <a href="#section5" class="nav-item">Academic & Prof.</a>
+    <a href="#section6" class="nav-item">Service History</a>
 </div>
 
-<div class="container">
+<div class="content-wrapper">
 
-  <section id="sec1">
-    <h2>I. Basic Profile</h2>
-    <div class="grid">
-      <div class="field-group">
-        <label>Full Name</label>
-        <input type="text" id="FullName" oninput="markDirty(this)" placeholder="Name as per service records">
-        <span class="status-icon" onclick="saveAtomic(this)"></span>
-      </div>
-      <div class="field-group">
-        <label>Gender</label>
-        <select id="Gender" onchange="markDirty(this)">
-          <option value="">SELECT</option>
-          <option value="MALE">MALE</option>
-          <option value="FEMALE">FEMALE</option>
-          <option value="OTHER">OTHER</option>
-        </select>
-        <span class="status-icon" onclick="saveAtomic(this)"></span>
-      </div>
-      <div class="field-group">
-        <label>PMIS Code (Read-Only)</label>
-        <input type="text" id="PMISCode" value="123456" readonly style="background:#eee">
-      </div>
-      <div class="field-group">
-        <label>D.O.B. (DD-MM-YYYY)</label>
-        <input type="text" id="DOB" oninput="applyDateMask(this); markDirty(this)" placeholder="00-00-0000">
-        <span class="status-icon" onclick="saveAtomic(this)"></span>
-      </div>
-    </div>
-  </section>
+    <section id="section1">
+        <h2>I. Personal Profile</h2>
+        <div class="form-grid">
+            <div class="field-group">
+                <label>Full Name (As per service records)</label>
+                <input type="text" id="full_name" oninput="markDirty(this)" placeholder="NAME AS PER SERVICE RECORDS">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Gender</label>
+                <select id="gender" onchange="markDirty(this)">
+                    <option value="">SELECT GENDER</option>
+                    <option value="MALE">MALE</option>
+                    <option value="FEMALE">FEMALE</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Designation</label>
+                <input type="text" id="designation" oninput="markDirty(this)" placeholder="DESIGNATION">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>PMIS Code</label>
+                <input type="text" id="pmis_code" readonly value="123456">
+            </div>
+            <div class="field-group">
+                <label>Date of Birth (DD-MM-YYYY)</label>
+                <input type="text" id="dob" oninput="maskDate(this); markDirty(this)" placeholder="DD-MM-YYYY">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Social Category</label>
+                <select id="social_category" onchange="markDirty(this)">
+                    <option value="GENERAL">GENERAL</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="OBC">OBC</option>
+                </select>
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Blood Group</label>
+                <select id="blood_group" onchange="markDirty(this)">
+                    <option value="">SELECT</option>
+                    <option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B-">B-</option>
+                    <option value="O+">O+</option><option value="O-">O-</option>
+                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Identification Mark</label>
+                <input type="text" id="id_mark" oninput="markDirty(this)" placeholder="VISIBLE MARK">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+        </div>
+    </section>
 
-  <section id="sec2">
-    <h2>II. Identity & Contact</h2>
-    <div class="grid">
-      <div class="field-group">
-        <label>Aadhaar Number</label>
-        <input type="text" id="Aadhaar" oninput="applyAadhaarMask(this); markDirty(this)" placeholder="0000 0000 0000">
-        <span class="status-icon" onclick="saveAtomic(this)"></span>
-      </div>
-      <div class="field-group">
-        <label>PAN Number</label>
-        <input type="text" id="PAN" oninput="markDirty(this)" placeholder="AAAAA0000A">
-        <span class="status-icon" onclick="saveAtomic(this)"></span>
-      </div>
-    </div>
-  </section>
+    <section id="section2">
+        <h2>II. Identity & Contact</h2>
+        <div class="form-grid">
+            <div class="field-group">
+                <label>Aadhaar Number</label>
+                <input type="text" id="aadhaar" oninput="maskAadhaar(this); markDirty(this)" placeholder="0000 0000 0000">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>PAN Number</label>
+                <input type="text" id="pan" oninput="maskPan(this); markDirty(this)" placeholder="AAAAA0000A">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>IP-Number (IP00-00000)</label>
+                <input type="text" id="ip_number" oninput="maskIP(this); markDirty(this)" placeholder="IP00-00000">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>GPF / PRAN No</label>
+                <input type="number" id="gpf_pran" oninput="markDirty(this)" placeholder="NUMBERS ONLY">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Personal Contact No.</label>
+                <input type="text" id="personal_mobile" oninput="maskMobile(this); markDirty(this)" placeholder="00000-00000">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>WhatsApp No.</label>
+                <input type="text" id="whatsapp_mobile" oninput="maskMobile(this); markDirty(this)" placeholder="00000-00000">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Alternate Contact No.</label>
+                <input type="text" id="alt_mobile" oninput="maskMobile(this); markDirty(this)" placeholder="00000-00000">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group">
+                <label>Email ID</label>
+                <input type="email" id="email" oninput="markDirty(this)" placeholder="EMAIL@DOMAIN.COM">
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+        </div>
+    </section>
 
-  </div>
+    <section id="section3">
+        <h2>III. Family & Address</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Father's Name</label><input type="text" id="f_name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Father's Contact</label><input type="text" id="f_mobile" oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Mother's Name</label><input type="text" id="m_name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Mother's Contact</label><input type="text" id="m_mobile" oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Spouse Name</label><input type="text" id="s_name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Spouse Contact</label><input type="text" id="s_mobile" oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group" style="grid-column: span 2;">
+                <label>Permanent Address (Max 300 Chars)</label>
+                <textarea id="perm_addr" oninput="markDirty(this)" maxlength="300"></textarea>
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group" style="grid-column: span 2;">
+                <label>Present Address (Max 300 Chars)</label>
+                <textarea id="pres_addr" oninput="markDirty(this)" maxlength="300"></textarea>
+                <div class="atomic-status" onclick="handleAtomicClick(this)"></div>
+            </div>
+            <div class="field-group"><label>LTC Home Town</label><input type="text" id="ltc_home" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+        </div>
+    </section>
+
+    <section id="section4">
+        <h2>IV. Banking & Financials</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Salary Account Number</label><input type="number" id="bank_acc" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>IFSC Number (AAAA0000000)</label><input type="text" id="ifsc" oninput="markDirty(this)" placeholder="ABCD0123456"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Bank Name and Branch</label><input type="text" id="bank_name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+        </div>
+    </section>
+
+    <section id="section5">
+        <h2>V. Academic & Professional</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Matric Board</label><input type="text" id="mat_board" oninput="markDirty(this)"></div>
+            <div class="field-group"><label>Matric Date</label><input type="text" id="mat_date" oninput="maskDate(this); markDirty(this)"></div>
+            <div class="field-group"><label>Matric Marks (Obt/Total)</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="mat_obt" placeholder="OBT" oninput="calcPerc('mat'); markDirty(this)">
+                    <input type="number" id="mat_tot" placeholder="TOT" oninput="calcPerc('mat'); markDirty(this)">
+                    <span id="mat_perc" style="align-self:center; font-weight:bold; color:var(--success)">0%</span>
+                </div>
+            </div>
+            <div class="qual-row">
+                <div class="switch-group">
+                    <span>B.Ed. Qualified?</span>
+                    <label style="display:inline-flex; gap:10px; cursor:pointer;">
+                        <input type="radio" name="bed_q" value="YES" onchange="toggleQual('bed', true); markDirty(this)"> YES
+                        <input type="radio" name="bed_q" value="NO" onchange="toggleQual('bed', false); markDirty(this)" checked> NO
+                    </label>
+                </div>
+                <div class="field-group"><input type="number" id="bed_marks" placeholder="MARKS" disabled oninput="markDirty(this)"></div>
+                <div class="field-group"><input type="text" id="bed_date" placeholder="DATE" disabled oninput="maskDate(this); markDirty(this)"></div>
+            </div>
+            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><input type="text" id="other_qual" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+        </div>
+    </section>
+
+    <section id="section6">
+        <h2>VI. Service History</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Date of First Appointment</label><input type="text" id="first_appt_date" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Appointment Type</label><input type="text" id="appt_type" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Retirement Date</label><input type="text" id="retire_date" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Remarks</label><textarea id="remarks" oninput="markDirty(this)"></textarea><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+        </div>
+    </section>
+
+</div>
 
 <script>
-  /**
-   * UI LOGIC
-   */
+    /** --- SYSTEM LOGIC --- **/
 
-  // 1. Mark field as "Dirty" (Changed)
-  function markDirty(el) {
-    const icon = el.parentElement.querySelector('.status-icon');
-    if (!el.readOnly) {
-      icon.innerHTML = '💾';
-      icon.className = 'status-icon floppy';
+    // 1. DIRTY STATE HANDLER
+    function markDirty(el) {
+        const container = el.closest('.field-group');
+        if (!container) return;
+        const icon = container.querySelector('.atomic-status');
+        if (icon && !icon.classList.contains('synced')) {
+            icon.innerHTML = '💾';
+            icon.classList.add('dirty');
+        }
     }
-  }
 
-  // 2. Atomic Save (Single Field)
-  function saveAtomic(iconEl) {
-    if (!iconEl.classList.contains('floppy')) return;
+    // 2. ATOMIC CLICK HANDLER
+    function handleAtomicClick(iconEl) {
+        if (!iconEl.classList.contains('dirty')) return;
+        
+        const fieldGroup = iconEl.closest('.field-group');
+        const input = fieldGroup.querySelector('input, select, textarea');
+        saveField(input.id, input.value, iconEl);
+    }
 
-    const input = iconEl.parentElement.querySelector('input, select, textarea');
-    const pmis = document.getElementById('PMISCode').value;
-    const fieldName = input.id;
-    const value = input.value;
+    // 3. ATOMIC SAVE (GAS CALL)
+    function saveField(fieldId, value, iconEl) {
+        iconEl.innerHTML = '⏳';
+        iconEl.classList.add('saving');
+        
+        const pmis = document.getElementById('pmis_code').value;
 
-    iconEl.innerHTML = '⏳'; // Loading
+        // Note: For actual deployment, replace with google.script.run
+        console.log(`Saving ${fieldId}: ${value} for PMIS ${pmis}`);
+        
+        // Simulating Success
+        setTimeout(() => {
+            iconEl.innerHTML = '✅';
+            iconEl.classList.remove('saving', 'dirty');
+            iconEl.classList.add('synced');
+            
+            // Revert tick after 3s to allow future updates
+            setTimeout(() => { iconEl.innerHTML = ''; iconEl.classList.remove('synced'); }, 3000);
+        }, 800);
+    }
 
-    google.script.run
-      .withSuccessHandler(() => {
-        iconEl.innerHTML = '✅';
-        iconEl.className = 'status-icon tick';
-      })
-      .atomicUpdate(pmis, fieldName, value);
-  }
+    // 4. GLOBAL SAVE
+    function saveAllDirty() {
+        const dirties = document.querySelectorAll('.atomic-status.dirty');
+        dirties.forEach(icon => handleAtomicClick(icon));
+    }
 
-  // 3. Global Save (All Dirty Fields)
-  function saveAll() {
-    const dirtyIcons = document.querySelectorAll('.status-icon.floppy');
-    dirtyIcons.forEach(icon => saveAtomic(icon));
-  }
+    /** --- MASKS & HELPERS --- **/
 
-  // 4. Masks
-  function applyDateMask(el) {
-    let v = el.value.replace(/\D/g, '').slice(0, 8);
-    if (v.length >= 2) v = v.slice(0, 2) + '-' + v.slice(2);
-    if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
-    el.value = v;
-  }
+    function maskDate(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 8);
+        if (v.length >= 2) v = v.slice(0, 2) + '-' + v.slice(2);
+        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
+        el.value = v;
+    }
 
-  function applyAadhaarMask(el) {
-    let v = el.value.replace(/\D/g, '').slice(0, 12);
-    let matches = v.match(/\d{4}/g);
-    if (matches) v = matches.join(' ') + (v.length % 4 !== 0 ? ' ' + v.slice(matches.join('').length) : '');
-    el.value = v;
-  }
+    function maskMobile(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 10);
+        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
+        el.value = v;
+    }
+
+    function maskAadhaar(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 12);
+        let m = v.match(/.{1,4}/g);
+        el.value = m ? m.join(' ') : v;
+    }
+
+    function maskIP(el) {
+        if (!el.value.startsWith('IP')) el.value = 'IP' + el.value.replace(/\D/g, '');
+        let v = el.value.slice(2).replace(/\D/g, '').slice(0, 7);
+        if (v.length >= 2) v = v.slice(0,2) + '-' + v.slice(2);
+        el.value = 'IP' + v;
+    }
+
+    function toggleQual(id, state) {
+        document.getElementById(id + '_marks').disabled = !state;
+        document.getElementById(id + '_date').disabled = !state;
+    }
+
+    function calcPerc(prefix) {
+        const obt = parseFloat(document.getElementById(prefix + '_obt').value);
+        const tot = parseFloat(document.getElementById(prefix + '_tot').value);
+        if (obt && tot) {
+            const p = ((obt / tot) * 100).toFixed(1);
+            document.getElementById(prefix + '_perc').innerText = p + '%';
+        }
+    }
+
+    // Navigation Highlighting
+    window.addEventListener('scroll', () => {
+        let current = "";
+        const sections = document.querySelectorAll('section');
+        sections.forEach(s => {
+            const top = s.offsetTop - 150;
+            if (pageYOffset >= top) current = s.getAttribute('id');
+        });
+        document.querySelectorAll('.nav-item').forEach(li => {
+            li.classList.remove('active');
+            if (li.getAttribute('href').includes(current)) li.classList.add('active');
+        });
+    });
 </script>
 
 </body>
