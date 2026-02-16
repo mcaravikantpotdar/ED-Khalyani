@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMIS Update Portal</title>
+    <title>PMIS Employee Update Portal</title>
     <style>
         :root {
             --primary: #1a73e8; --success: #34a853; --error: #ea4335;
@@ -21,10 +21,17 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .header-info strong { font-size: 1.1rem; color: var(--primary); }
+        .header-controls { display: flex; align-items: center; gap: 12px; }
+        
+        .pmis-input-wrapper { display: flex; align-items: center; background: #f1f3f4; border-radius: 4px; padding: 4px 8px; border: 1px solid var(--border); }
+        .pmis-input-wrapper label { font-size: 0.8rem; font-weight: bold; margin-right: 8px; color: var(--text-secondary); }
+        .pmis-box {
+            border: none; background: transparent; font-weight: bold; width: 80px; 
+            text-align: center; font-size: 1rem; color: var(--primary); outline: none;
+        }
 
-        .btn-global-save { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; }
-        .btn-global-save:hover { background: #1558b0; }
+        .btn-load { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        .btn-load:hover { opacity: 0.9; }
 
         /* --- STICKY NAV --- */
         .nav-bar {
@@ -36,7 +43,7 @@
         .nav-item:hover, .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* --- CONTENT LAYOUT --- */
-        .content-wrapper { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
+        .content-wrapper { max-width: 1100px; margin: 20px auto; padding: 0 15px; padding-bottom: 100px; }
         section { background: var(--card-bg); border-radius: 8px; padding: 30px; margin-bottom: 40px; border: 1px solid var(--border); }
         h2 { margin: 0 0 25px 0; color: var(--primary); font-size: 1.3rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 
@@ -50,35 +57,40 @@
             text-transform: uppercase; transition: border 0.2s;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-        input[readonly] { background: #f1f3f4; cursor: not-allowed; color: #555; }
+        input[readonly] { background: #f1f3f4; cursor: not-allowed; color: #5f6368; }
 
-        /* --- ATOMIC ICONS --- */
+        /* --- ATOMIC STATUS ICONS --- */
         .atomic-status {
-            position: absolute; right: -30px; top: 35px; width: 24px; height: 24px;
+            position: absolute; right: -32px; top: 36px; width: 24px; height: 24px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: transform 0.2s;
+            font-size: 1.1rem;
         }
         .atomic-status.dirty { color: var(--primary); }
         .atomic-status.saving { color: orange; animation: spin 1s infinite linear; }
-        .atomic-status.synced { color: var(--success); cursor: default; }
+        .atomic-status.synced { color: var(--success); }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* --- RESPONSIVE --- */
         @media (max-width: 850px) {
             .form-grid { grid-template-columns: 1fr; }
-            .atomic-status { right: 10px; top: 10px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-            .nav-bar { top: 60px; } /* Adjust for mobile header height */
+            .atomic-status { right: 8px; top: 8px; background: white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); width: 20px; height: 20px; font-size: 0.9rem; }
+            .sticky-header { flex-direction: column; padding: 10px; gap: 10px; }
+            .nav-bar { top: 105px; }
         }
     </style>
 </head>
 <body>
 
 <div class="sticky-header">
-    <div class="header-info">
-        <strong>PMIS PORTAL</strong> | <span id="userDisp">PMIS: <input type="text" id="global_pmis" value="123456" style="width:80px; border:none; border-bottom:1px solid #ccc; font-weight:bold; text-align:center;"></span>
+    <div class="header-controls">
+        <div class="pmis-input-wrapper">
+            <label>PMIS CODE</label>
+            <input type="text" id="global_pmis" class="pmis-box" placeholder="REQUIRED">
+        </div>
+        <button class="btn-load" onclick="loadEmployeeData()">LOAD DATA</button>
     </div>
-    <button class="btn-global-save" onclick="saveAllDirty()">SAVE ALL CHANGES</button>
+    <div id="statusIndicator" style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary);">READY</div>
 </div>
 
 <div class="nav-bar">
@@ -86,223 +98,221 @@
     <a href="#section2" class="nav-item">Identity</a>
     <a href="#section3" class="nav-item">Family</a>
     <a href="#section4" class="nav-item">Finance</a>
-    <a href="#section5" class="nav-item">Education</a>
+    <a href="#section5" class="nav-item">Academic</a>
     <a href="#section6" class="nav-item">Service</a>
 </div>
 
 <div class="content-wrapper">
 
+    <!-- I. PERSONAL -->
     <section id="section1">
         <h2>I. Personal Profile</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Full Name</label><input type="text" id="Full Name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Gender</label><select id="Gender" onchange="markDirty(this)"><option value="">SELECT</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option><option value="OTHER">OTHER</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Designation</label><input type="text" id="Designation" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>PMIS Code (Read Only)</label><input type="text" id="PMIS Code" value="123456" readonly></div>
-            <div class="field-group"><label>D.O.B.</label><input type="text" id="D.O.B." oninput="maskDate(this); markDirty(this)" placeholder="DD-MM-YYYY"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Social Category</label><select id="Social Category" onchange="markDirty(this)"><option value="GENERAL">GENERAL</option><option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Blood Group</label><select id="Blood Group" onchange="markDirty(this)"><option value="">SELECT</option><option value="A+">A+</option><option value="B+">B+</option><option value="O+">O+</option><option value="AB+">AB+</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Identification Mark</label><input type="text" id="Identification Mark" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Full Name</label><input type="text" id="Full Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Gender</label><select id="Gender" onchange="handleInput(this)"><option value="">SELECT</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option><option value="OTHER">OTHER</option></select><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Designation</label><input type="text" id="Designation" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>PMIS Code</label><input type="text" id="PMIS Code" readonly></div>
+            <div class="field-group"><label>Date of Birth</label><input type="text" id="D.O.B." oninput="maskDate(this); handleInput(this)" placeholder="DD-MM-YYYY"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Social Category</label><select id="Social Category" onchange="handleInput(this)"><option value="">SELECT</option><option value="GENERAL">GENERAL</option><option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option></select><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Blood Group</label><select id="Blood Group" onchange="handleInput(this)"><option value="">SELECT</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option></select><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Identification Mark</label><input type="text" id="Identification Mark" oninput="handleInput(this)"><div class="atomic-status"></div></div>
         </div>
     </section>
 
+    <!-- II. IDENTITY & CONTACT -->
     <section id="section2">
         <h2>II. Identity & Contact</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Aadhaar Number</label><input type="text" id="Aadhaar Number" oninput="maskAadhaar(this); markDirty(this)" placeholder="0000 0000 0000"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>PAN Number</label><input type="text" id="PAN Number" oninput="markDirty(this)" placeholder="AAAAA0000A"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>IP-Number</label><input type="text" id="IP-Number" oninput="maskIP(this); markDirty(this)" placeholder="IP00-00000"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>GPF / PRAN No</label><input type="number" id="GPF / PRAN No" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Personal Contact No.</label><input type="text" id="Personal Contact No." oninput="maskMobile(this); markDirty(this)" placeholder="00000-00000"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>WhatsApp No.</label><input type="text" id="WhatsApp No." oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Alternate Contact No.</label><input type="text" id="Alternate Contact No." oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Emergency Contact No.</label><input type="text" id="Emergency Contact No." oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Email ID</label><input type="email" id="Email ID" oninput="markDirty(this)" style="text-transform: lowercase;"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Aadhaar Number</label><input type="text" id="Aadhaar Number" oninput="maskAadhaar(this); handleInput(this)" placeholder="0000 0000 0000"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>PAN Number</label><input type="text" id="PAN Number" oninput="handleInput(this)" maxlength="10" placeholder="AAAAA0000A"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>IP-Number</label><input type="text" id="IP-Number" oninput="handleInput(this)" placeholder="IP00-00000"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>GPF / PRAN No</label><input type="text" id="GPF / PRAN No" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Personal Contact No.</label><input type="text" id="Personal Contact No." oninput="maskMobile(this); handleInput(this)" placeholder="00000-00000"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>WhatsApp No.</label><input type="text" id="WhatsApp No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Alternate Contact No.</label><input type="text" id="Alternate Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Emergency Contact No.</label><input type="text" id="Emergency Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Email ID</label><input type="email" id="Email ID" oninput="handleInput(this)" style="text-transform: lowercase;"><div class="atomic-status"></div></div>
         </div>
     </section>
 
+    <!-- III. FAMILY & ADDRESS -->
     <section id="section3">
         <h2>III. Family & Address</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Father's Name</label><input type="text" id="Father's Name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Father's Contact No.</label><input type="text" id="Father's Contact No." oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Mother's Name</label><input type="text" id="Mother's Name" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Mother's Contact No.</label><input type="text" id="Mother's Contact No." oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Name of Spouse</label><input type="text" id="Name of Spouse" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Contact No. of Spouse</label><input type="text" id="Contact No. of Spouse" oninput="maskMobile(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Permanent Address</label><textarea id="Permanent Address" oninput="markDirty(this)" maxlength="300"></textarea><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Present Address</label><textarea id="Present Address" oninput="markDirty(this)" maxlength="300"></textarea><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>LTC Home Town</label><input type="text" id="LTC Home Town" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Father's Name</label><input type="text" id="Father's Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Father's Contact No.</label><input type="text" id="Father's Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Mother's Name</label><input type="text" id="Mother's Name" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Mother's Contact No.</label><input type="text" id="Mother's Contact No." oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Name of Spouse</label><input type="text" id="Name of Spouse" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Contact No. of Spouse</label><input type="text" id="Contact No. of Spouse" oninput="maskMobile(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Permanent Address</label><textarea id="Permanent Address" oninput="handleInput(this)" rows="2"></textarea><div class="atomic-status"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Present Address</label><textarea id="Present Address" oninput="handleInput(this)" rows="2"></textarea><div class="atomic-status"></div></div>
+            <div class="field-group"><label>LTC Home Town</label><input type="text" id="LTC Home Town" oninput="handleInput(this)"><div class="atomic-status"></div></div>
         </div>
     </section>
 
+    <!-- IV. BANKING -->
     <section id="section4">
         <h2>IV. Banking & Financials</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Salary Account Number</label><input type="number" id="Salary Account Number" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>IFSC Number</label><input type="text" id="IFSC Number" oninput="markDirty(this)" placeholder="AAAA0000000"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Bank Name and Branch</label><input type="text" id="Bank Name and Branch" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Salary Account Number</label><input type="text" id="Salary Account Number" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>IFSC Number</label><input type="text" id="IFSC Number" oninput="handleInput(this)" placeholder="AAAA0000000"><div class="atomic-status"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Bank Name and Branch</label><input type="text" id="Bank Name and Branch" oninput="handleInput(this)"><div class="atomic-status"></div></div>
         </div>
     </section>
 
+    <!-- V. ACADEMIC -->
     <section id="section5">
         <h2>V. Academic & Professional</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Matric Board</label><input type="text" id="Matric Board" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Matric Passing Date</label><input type="text" id="Matriculation Passing Date" oninput="maskDate(this); markDirty(this)"></div>
-            <div class="field-group" style="grid-column: span 2;"><label>Matric Marks</label><input type="text" id="Matriculation (Marks Obtained/Total Marks)" oninput="markDirty(this)" placeholder="OBT/TOTAL"></div>
-
-            <div class="field-group"><label>10+2 Board</label><input type="text" id="10+2 Board" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>10+2 Stream</label><input type="text" id="10+2 Stream" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>10+2 Passing Date</label><input type="text" id="10+2 Passing Date" oninput="maskDate(this); markDirty(this)"></div>
-            <div class="field-group"><label>10+2 Marks</label><input type="text" id="10+2 (Marks Obtained/Total Marks)" oninput="markDirty(this)"></div>
-
-            <div class="field-group"><label>Graduation Stream</label><input type="text" id="Graduation Stream" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Graduation Subjects</label><input type="text" id="Graduation – Main Subject(s)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Graduation Date</label><input type="text" id="Graduation Completion Date" oninput="maskDate(this); markDirty(this)"></div>
-            <div class="field-group"><label>Graduation Marks</label><input type="text" id="Graduation (Marks Obtained/Total Marks)" oninput="markDirty(this)"></div>
-
-            <div class="field-group"><label>PG Stream</label><input type="text" id="Post-Graduation Stream" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>PG Subjects</label><input type="text" id="Post-Graduation – Main Subject(s)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>PG Date</label><input type="text" id="Post-Graduation Completion Date" oninput="maskDate(this); markDirty(this)"></div>
-            <div class="field-group"><label>PG Marks</label><input type="text" id="Post-Graduation (Marks Obtained/Total Marks)" oninput="markDirty(this)"></div>
-
-            <div class="field-group"><label>B.Ed. Qualified?</label><select id="B. Ed. Qualified?" onchange="markDirty(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>B.Ed. Marks</label><input type="text" id="If B.Ed. is qualified (Marks)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Date of B.Ed.</label><input type="text" id="Date of B.Ed." oninput="maskDate(this); markDirty(this)"></div>
-
-            <div class="field-group"><label>M.Ed. Qualified?</label><select id="M. Ed. Qualified?" onchange="markDirty(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>M.Ed. Marks</label><input type="text" id="If M.Ed. is qualified (Marks)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Date of M.Ed.</label><input type="text" id="Date of M.Ed." oninput="maskDate(this); markDirty(this)"></div>
+            <div class="field-group"><label>Matric Board</label><input type="text" id="Matric Board" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Matric Passing Date</label><input type="text" id="Matriculation Passing Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Matriculation (Marks Obtained/Total Marks)</label><input type="text" id="Matriculation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
             
-             <div class="field-group"><label>T.E.T. Qualified?</label><select id="T.E.T. Qualified?" onchange="markDirty(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>T.E.T. Marks</label><input type="text" id="If T.E.T. is qualified (Marks)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Date of T.E.T.</label><input type="text" id="Date of T.E.T." oninput="maskDate(this); markDirty(this)"></div>
+            <div class="field-group"><label>10+2 Board</label><input type="text" id="10+2 Board" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>10+2 Stream</label><input type="text" id="10+2 Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>10+2 Passing Date</label><input type="text" id="10+2 Passing Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>10+2 (Marks Obtained/Total Marks)</label><input type="text" id="10+2 (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
 
-             <div class="field-group"><label>J.B.T. Qualified?</label><select id="J.B.T. Qualified?" onchange="markDirty(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>J.B.T. Marks</label><input type="text" id="If J.B.T. is qualified (Marks)" oninput="markDirty(this)"></div>
-            <div class="field-group"><label>Date of J.B.T.</label><input type="text" id="Date of J.B.T." oninput="maskDate(this); markDirty(this)"></div>
+            <div class="field-group"><label>Graduation Stream</label><input type="text" id="Graduation Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Graduation – Main Subject(s)</label><input type="text" id="Graduation – Main Subject(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Graduation Completion Date</label><input type="text" id="Graduation Completion Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Graduation (Marks Obtained/Total Marks)</label><input type="text" id="Graduation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
 
-            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><input type="text" id="Any other Qualification(s)" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>PG Stream</label><input type="text" id="Post-Graduation Stream" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>PG – Main Subject(s)</label><input type="text" id="Post-Graduation – Main Subject(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>PG Completion Date</label><input type="text" id="Post-Graduation Completion Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>PG (Marks Obtained/Total Marks)</label><input type="text" id="Post-Graduation (Marks Obtained/Total Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            
+            <div class="field-group"><label>B. Ed. Qualified?</label><select id="B. Ed. Qualified?" onchange="handleInput(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status"></div></div>
+            <div class="field-group"><label>If B.Ed. is qualified (Marks)</label><input type="text" id="If B.Ed. is qualified (Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Date of B.Ed.</label><input type="text" id="Date of B.Ed." oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+
+            <div class="field-group"><label>T.E.T. Qualified?</label><select id="T.E.T. Qualified?" onchange="handleInput(this)"><option value="NO">NO</option><option value="YES">YES</option></select><div class="atomic-status"></div></div>
+            <div class="field-group"><label>If T.E.T. is qualified (Marks)</label><input type="text" id="If T.E.T. is qualified (Marks)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Date of T.E.T.</label><input type="text" id="Date of T.E.T." oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+
+            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><input type="text" id="Any other Qualification(s)" oninput="handleInput(this)"><div class="atomic-status"></div></div>
         </div>
     </section>
 
+    <!-- VI. SERVICE -->
     <section id="section6">
         <h2>VI. Service History</h2>
         <div class="form-grid">
-            <div class="field-group"><label>Date of First Appointment</label><input type="text" id="Date of First Appointment" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Appointment Type</label><input type="text" id="Appointment Type" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Designation (1st Appt)</label><input type="text" id="Designation as per 1st appointment" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Date of Joining (1st Appt)</label><input type="text" id="Date of Joining as per 1st Appointment" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Place of Joining (1st Appt)</label><input type="text" id="Place / Station of Joining as per 1st Appointment" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            
-            <div class="field-group"><label>Date of Regularisation</label><input type="text" id="Date of Regularisation" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Designation (Regularisation)</label><input type="text" id="Designation after Regularisation" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            
-            <div class="field-group"><label>Date of Promotion</label><input type="text" id="Date of Promotion" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Designation (Promotion)</label><input type="text" id="Designation after Promotion" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>Place of Joining (Promotion)</label><input type="text" id="Place / Station of Joining after Promotion" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            
-            <div class="field-group"><label>Retirement Date</label><input type="text" id="Retirement Date" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-
-            <div class="field-group"><label>Previous Station # 1</label><input type="text" id="Previous Station # 1" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>From Date # 1</label><input type="text" id="From Date # 1" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>To date # 1</label><input type="text" id="To date # 1" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-
-            <div class="field-group"><label>Previous Station # 2</label><input type="text" id="Previous Station # 2" oninput="markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>From Date # 2</label><input type="text" id="From Date # 2" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-            <div class="field-group"><label>To date # 2</label><input type="text" id="To date # 2" oninput="maskDate(this); markDirty(this)"><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
-
-            <div class="field-group" style="grid-column: span 2;"><label>Remarks</label><textarea id="Remarks" oninput="markDirty(this)"></textarea><div class="atomic-status" onclick="handleAtomicClick(this)"></div></div>
+            <div class="field-group"><label>Date of First Appointment</label><input type="text" id="Date of First Appointment" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Appointment Type</label><input type="text" id="Appointment Type" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Designation (1st Appt)</label><input type="text" id="Designation as per 1st appointment" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Date of Joining (1st Appt)</label><input type="text" id="Date of Joining as per 1st Appointment" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Place / Station of Joining (1st Appt)</label><input type="text" id="Place / Station of Joining as per 1st Appointment" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Date of Regularisation</label><input type="text" id="Date of Regularisation" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Designation after Regularisation</label><input type="text" id="Designation after Regularisation" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Date of Promotion</label><input type="text" id="Date of Promotion" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Designation after Promotion</label><input type="text" id="Designation after Promotion" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Place / Station of Joining after Promotion</label><input type="text" id="Place / Station of Joining after Promotion" oninput="handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group"><label>Retirement Date</label><input type="text" id="Retirement Date" oninput="maskDate(this); handleInput(this)"><div class="atomic-status"></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Remarks</label><textarea id="Remarks" oninput="handleInput(this)"></textarea><div class="atomic-status"></div></div>
         </div>
     </section>
-
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
+    const SURL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
 
-    // --- LOGIC ---
-    function markDirty(el) {
-        const container = el.closest('.field-group');
-        // If it's inside a container without atomic status (e.g. read-only), skip
-        let icon = container.querySelector('.atomic-status');
-        if (!icon) {
-            // Create icon dynamically if missing
-            icon = document.createElement('div');
-            icon.className = 'atomic-status';
-            icon.onclick = function() { handleAtomicClick(this); };
-            container.appendChild(icon);
-        }
-        
-        if (!icon.classList.contains('synced')) {
-            icon.innerHTML = '💾';
-            icon.classList.add('dirty');
-        }
-        
-        // Sync PMIS to global input
-        if (el.id === 'PMIS Code') {
-            document.getElementById('global_pmis').value = el.value;
+    // --- LOADING LOGIC ---
+    async function loadEmployeeData() {
+        const pmis = document.getElementById('global_pmis').value;
+        const status = document.getElementById('statusIndicator');
+        if (!pmis) return alert("Please enter PMIS Code");
+
+        status.innerText = "LOADING...";
+        status.style.color = "orange";
+
+        try {
+            const response = await fetch(SURL, {
+                method: "POST",
+                body: JSON.stringify({ action: "fetchRecord", pmisCode: pmis })
+            });
+            const data = await response.json();
+
+            if (data.status === "found") {
+                // Populate all fields that match sheet headers
+                Object.keys(data).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) {
+                        el.value = data[key];
+                        // Update PMIS code field specifically if found
+                        if (key === "PMIS Code") el.value = data[key];
+                    }
+                });
+                status.innerText = "RECORD LOADED";
+                status.style.color = "var(--success)";
+            } else {
+                status.innerText = "NOT FOUND";
+                status.style.color = "var(--error)";
+                alert("Employee with PMIS Code " + pmis + " not found.");
+            }
+        } catch (e) {
+            status.innerText = "LOAD ERROR";
+            console.error(e);
         }
     }
 
-    async function handleAtomicClick(iconEl) {
-        if (!iconEl.classList.contains('dirty')) return;
+    // --- ATOMIC SAVING LOGIC ---
+    let saveTimeout = null;
+
+    function handleInput(el) {
+        const container = el.closest('.field-group');
+        const icon = container.querySelector('.atomic-status');
         
-        const container = iconEl.closest('.field-group');
-        const input = container.querySelector('input, select, textarea');
-        // Use the global PMIS input in header for the ID key
+        icon.innerText = "💾";
+        icon.className = "atomic-status dirty";
+
+        // Auto-save after 1.5 seconds of no typing
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            performAtomicSave(el, icon);
+        }, 1500);
+
+        // Also allow manual save by clicking floppy
+        icon.onclick = () => performAtomicSave(el, icon);
+    }
+
+    async function performAtomicSave(inputEl, iconEl) {
+        if (!iconEl.classList.contains('dirty')) return;
+
         const pmis = document.getElementById('global_pmis').value;
+        if (!pmis) return;
 
-        // Visual Feedback: Loading
-        iconEl.innerHTML = '⏳';
-        iconEl.classList.add('saving');
+        iconEl.innerText = "⏳";
+        iconEl.className = "atomic-status saving";
 
-        // Payload Construction
         const payload = {
             action: "atomicUpdate",
             pmisCode: pmis,
-            fieldName: input.id, // This matches the Sheet Header exactly
-            value: input.value
+            fieldName: inputEl.id,
+            value: inputEl.value
         };
 
         try {
-            // Send Data to Google Script
-            await fetch(WEB_APP_URL, {
+            // no-cors mode means we won't see the response body, but the data will arrive
+            await fetch(SURL, {
                 method: "POST",
-                mode: "no-cors", // Essential for Google Apps Script
-                headers: { "Content-Type": "application/json" },
+                mode: "no-cors",
                 body: JSON.stringify(payload)
             });
 
-            // Simulate Success (Because no-cors doesn't return response)
+            // Assume success after short delay since no-cors gives no feedback
             setTimeout(() => {
-                iconEl.innerHTML = '✅';
-                iconEl.classList.remove('saving', 'dirty');
-                iconEl.classList.add('synced');
-                
-                // Reset to neutral after 3 seconds
-                setTimeout(() => { 
-                    iconEl.innerHTML = ''; 
-                    iconEl.classList.remove('synced'); 
-                }, 3000);
-            }, 1000);
+                iconEl.innerText = "✅";
+                iconEl.className = "atomic-status synced";
+                setTimeout(() => { iconEl.innerText = ""; iconEl.className = "atomic-status"; }, 2000);
+            }, 800);
 
         } catch (e) {
-            iconEl.innerHTML = '❌';
-            console.error("Save Failed", e);
-            alert("Save Failed: " + e);
+            iconEl.innerText = "❌";
+            console.error(e);
         }
-    }
-
-    function saveAllDirty() {
-        const dirtyIcons = document.querySelectorAll('.atomic-status.dirty');
-        if (dirtyIcons.length === 0) {
-            alert("No changes detected.");
-            return;
-        }
-        dirtyIcons.forEach(icon => handleAtomicClick(icon));
     }
 
     // --- INPUT MASKS ---
@@ -324,12 +334,6 @@
         let m = v.match(/.{1,4}/g);
         el.value = m ? m.join(' ') : v;
     }
-
-    function maskIP(el) {
-        // Simple helper to keep IP prefix if needed
-        // Assuming user types IP...
-    }
 </script>
-
 </body>
 </html>
