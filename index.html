@@ -2,735 +2,376 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMIS Employee Update Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PMIS Dynamic Professional Portal</title>
     <style>
         :root {
-            --primary: #1a73e8;
-            --success: #34a853;
-            --error: #ea4335;
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --border: #dadce0;
-            --text-main: #202124;
-            --text-secondary: #5f6368;
+            --primary: #1a73e8; --primary-hover: #174ea6;
+            --success: #1e8e3e; --error: #d93025;
+            --bg: #f8f9fa; --surface: #ffffff; --border: #dadce0;
+            --text: #202124; --text-light: #5f6368;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
         }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            background: var(--bg);
-            color: var(--text-main);
-            scroll-behavior: smooth;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
 
         /* --- STICKY HEADER --- */
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        header { 
+            position: sticky; top: 0; z-index: 1000; background: var(--surface); 
+            padding: 12px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px;
         }
-
-        .header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .auth-controls { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 11px; font-weight: bold; color: var(--text-light); text-transform: uppercase; }
         
-        .pmis-input-wrapper {
-            display: flex;
-            align-items: center;
-            background: #f1f3f4;
-            border-radius: 4px;
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            transition: border 0.3s;
+        .std-input { 
+            padding: 10px; border: 1px solid var(--border); border-radius: 4px; 
+            font-size: 14px; outline: none; background: #f1f3f4; transition: 0.2s;
         }
-        .pmis-input-wrapper label { font-size: 0.75rem; font-weight: bold; margin-right: 8px; color: var(--text-secondary); }
-        .pmis-box {
-            border: none;
-            background: transparent;
-            font-weight: bold;
-            width: 85px;
-            text-align: center;
-            font-size: 1rem;
-            color: var(--primary);
-            outline: none;
-        }
+        .std-input:focus { border-color: var(--primary); background: #fff; }
 
-        .btn-load {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
+        .btn { 
+            padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer;
+            font-weight: 600; font-size: 13px; transition: 0.2s;
         }
-        .btn-load:hover { background: #1557b0; }
-        .btn-load:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-blue:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--primary); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* --- STICKY NAV --- */
-        .nav-bar {
-            position: sticky;
-            top: 65px;
-            z-index: 999;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 0 15px;
+        /* --- DASHBOARD NAVIGATION --- */
+        nav { 
+            position: sticky; top: 75px; z-index: 999; background: var(--surface);
+            display: flex; overflow-x: auto; border-bottom: 1px solid var(--border);
+            scrollbar-width: none;
         }
-        .nav-item {
-            padding: 15px 20px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            font-weight: 500;
-            border-bottom: 3px solid transparent;
+        nav::-webkit-scrollbar { display: none; }
+        .nav-item { 
+            padding: 15px 20px; text-decoration: none; color: var(--text-light);
+            font-size: 13px; font-weight: 500; white-space: nowrap; border-bottom: 3px solid transparent;
         }
-        .nav-item:hover, .nav-item.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
+        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-        /* --- CONTENT LAYOUT --- */
-        .content-wrapper {
-            max-width: 1100px;
-            margin: 20px auto;
-            padding: 0 15px;
-            padding-bottom: 100px;
-        }
-        section {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid var(--border);
-        }
-        h2 {
-            margin: 0 0 25px 0;
-            color: var(--primary);
-            font-size: 1.25rem;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
+        /* --- MAIN CONTENT --- */
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px 100px; }
+        .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .card h2 { margin: 0 0 20px 0; color: var(--primary); font-size: 18px; border-bottom: 1px solid #f1f3f4; padding-bottom: 12px; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px 40px;
-        }
-        .field-group {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        /* --- INPUTS & MANUAL SAVE BUTTONS --- */
-        .input-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px 40px; }
+        .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .field label { font-size: 12px; font-weight: 600; color: var(--text-light); }
         
-        input, select, textarea {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            outline: none;
-            text-transform: uppercase;
-            transition: all 0.2s;
+        .input-wrap { display: flex; align-items: center; gap: 8px; }
+        input, select, textarea { 
+            flex: 1; padding: 12px; font-size: 15px; border: 1px solid var(--border); 
+            border-radius: 4px; background: #fff; width: 100%; outline: none;
+            text-transform: uppercase; transition: border 0.2s;
         }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(26,115,232,0.1);
-        }
-        input.invalid {
-            border-color: var(--error);
-            background-color: #fff8f8;
-        }
+        input:focus { border-color: var(--primary); }
 
-        .error-hint {
-            font-size: 0.7rem;
-            color: var(--error);
-            margin-top: 4px;
-            display: none;
-            font-weight: 500;
+        .save-btn { 
+            background: var(--success); color: white; border: none; padding: 10px 14px; 
+            border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
+            display: none; animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        input.invalid ~ .error-hint { display: block; }
+        @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .save-btn-manual {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.75rem;
-            display: none;
-            animation: fadeIn 0.3s;
-            white-space: nowrap;
-        }
-        .save-btn-manual:hover { background: #2d8c47; }
+        .pct-badge { background: #e8f0fe; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+        .sync-badge { min-width: 24px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+
+        /* --- MODALS --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal { background: #fff; border-radius: 8px; width: 100%; max-width: 450px; padding: 30px; box-shadow: var(--shadow); position: relative; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
+        @media (max-width: 700px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .auth-controls { width: 100%; }
+            nav { top: 145px; }
+            .grid { grid-template-columns: 1fr; }
+            .card { padding: 16px; }
         }
 
-        /* --- STATUS INDICATORS --- */
-        .status-badge {
-            font-size: 1.1rem;
-            min-width: 24px;
-            text-align: center;
+        #toast { 
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            background: #323232; color: #fff; padding: 12px 24px; border-radius: 4px; 
+            font-size: 14px; display: none; z-index: 3000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .status-badge.saving { animation: spin 1s infinite linear; display: inline-block; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        @media (max-width: 850px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .sticky-header { flex-direction: column; padding: 10px; gap: 10px; }
-            .nav-bar { top: 140px; }
-        }
+        .spin { animation: rotate 1s linear infinite; display: inline-block; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="sticky-header">
-    <div class="header-controls">
-        <div class="pmis-input-wrapper">
+<header>
+    <div class="auth-controls">
+        <div class="input-group">
             <label>PMIS CODE</label>
-            <input type="text" id="global_pmis" class="pmis-box" maxlength="5" placeholder="5 DIGITS" oninput="this.value=this.value.replace(/\D/g,'')">
+            <input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits" oninput="this.value=this.value.replace(/\D/g,'')">
         </div>
-        <div class="pmis-input-wrapper">
+        <div class="input-group">
             <label>D.O.B.</label>
-            <input type="text" id="auth_dob" class="pmis-box" style="width: 110px;" placeholder="DD-MM-YYYY" oninput="maskDate(this)">
+            <input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)">
         </div>
-        <button class="btn-load" id="loadBtn" onclick="loadEmployeeData()">AUTHENTICATE & LOAD</button>
+        <button class="btn btn-blue" id="loadBtn" onclick="appAction('fetchRecord')">LOAD DATA</button>
+        <button class="btn btn-outline" onclick="appAction('register')">REGISTER</button>
     </div>
-    <div id="statusIndicator" style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary);">READY</div>
+    <button class="btn btn-outline" onclick="toggleAdmin(true)">ADMIN PANEL</button>
+</header>
+
+<nav id="dynamicNav"></nav>
+
+<div class="container" id="mainView">
+    <div style="text-align:center; padding-top: 100px; color: var(--text-light);">
+        <h3>PMIS Professional Dashboard</h3>
+        <p>Enter your PMIS Code and D.O.B to access your dynamic profile.</p>
+    </div>
 </div>
 
-<div class="nav-bar">
-    <a href="#personal-details" class="nav-item">Personal Details</a>
-    <a href="#personal-contact" class="nav-item">Personal Contact</a>
-    <a href="#salary-bank" class="nav-item">Salary & Bank</a>
-    <a href="#family-details" class="nav-item">Family</a>
-    <a href="#education" class="nav-item">Education</a>
-    <a href="#professional" class="nav-item">Professional</a>
-    <a href="#service" class="nav-item">Service Details</a>
-    <a href="#station-history" class="nav-item">Station History</a>
+<div class="overlay" id="adminOverlay">
+    <div class="modal">
+        <h3>Admin Access</h3>
+        <input type="password" id="adminPass" class="std-input" style="width:100%; margin: 15px 0;" placeholder="Enter Master Password">
+        <div style="display:flex; gap:10px; justify-content: flex-end;">
+            <button class="btn btn-outline" onclick="toggleAdmin(false)">CANCEL</button>
+            <button class="btn btn-blue" onclick="authAdmin()">LOGIN</button>
+        </div>
+    </div>
 </div>
 
-<div class="content-wrapper">
-
-    <!-- 1. PERSONAL DETAILS -->
-    <section id="personal-details">
-        <h2>Personal Details</h2>
-        <div class="form-grid">
-            <div class="field-group">
-                <label>Full Name</label>
-                <div class="input-container">
-                    <input type="text" id="Full Name" data-type="name" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Gender</label>
-                <div class="input-container">
-                    <select id="Gender" onchange="handleFieldChange(this)">
-                        <option value="">SELECT</option>
-                        <option value="MALE">MALE</option>
-                        <option value="FEMALE">FEMALE</option>
-                    </select>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Designation</label>
-                <div class="input-container">
-                    <input type="text" id="Designation" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>IP-Number</label>
-                <div class="input-container">
-                    <input type="text" id="IP-Number" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>GPF / PRAN No</label>
-                <div class="input-container">
-                    <input type="text" id="GPF / PRAN No" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Aadhaar Number</label>
-                <div class="input-container">
-                    <input type="text" id="Aadhaar Number" data-type="aadhaar" oninput="maskAadhaar(this); handleFieldChange(this)" placeholder="0000 0000 0000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-                <span class="error-hint">Requires 12 digits</span>
-            </div>
-            <div class="field-group">
-                <label>PAN Number</label>
-                <div class="input-container">
-                    <input type="text" id="PAN Number" data-type="pan" maxlength="10" oninput="handleFieldChange(this)" placeholder="ABCDE1234F">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-                <span class="error-hint">Pattern: AAAAA0000A</span>
-            </div>
-            <div class="field-group">
-                <label>Social Category</label>
-                <div class="input-container">
-                    <select id="Social Category" onchange="handleFieldChange(this)">
-                        <option value="">SELECT</option>
-                        <option value="GENERAL">GENERAL</option>
-                        <option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option>
-                    </select>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Blood Group</label>
-                <div class="input-container">
-                    <select id="Blood Group" onchange="handleFieldChange(this)">
-                        <option value="">SELECT</option>
-                        <option value="A+">A+</option><option value="A-">A-</option>
-                        <option value="B+">B+</option><option value="B-">B-</option>
-                        <option value="O+">O+</option><option value="O-">O-</option>
-                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                    </select>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Identification Mark</label>
-                <div class="input-container">
-                    <input type="text" id="Identification Mark" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>LTC Home Town</label>
-                <div class="input-container">
-                    <input type="text" id="LTC Home Town" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Remarks</label>
-                <div class="input-container">
-                    <textarea id="Remarks" rows="1" oninput="handleFieldChange(this)"></textarea>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 2. PERSONAL CONTACT -->
-    <section id="personal-contact">
-        <h2>Personal Contact</h2>
-        <div class="form-grid">
-            <div class="field-group">
-                <label>Personal Contact No.</label>
-                <div class="input-container">
-                    <input type="text" id="Personal Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>WhatsApp No.</label>
-                <div class="input-container">
-                    <input type="text" id="WhatsApp No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Alternate Contact No.</label>
-                <div class="input-container">
-                    <input type="text" id="Alternate Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Emergency Contact No.</label>
-                <div class="input-container">
-                    <input type="text" id="Emergency Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group" style="grid-column: span 2;">
-                <label>Permanent Address</label>
-                <div class="input-container">
-                    <textarea id="Permanent Address" rows="2" oninput="handleFieldChange(this)"></textarea>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group" style="grid-column: span 2;">
-                <label>Present Address</label>
-                <div class="input-container">
-                    <textarea id="Present Address" rows="2" oninput="handleFieldChange(this)"></textarea>
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Email ID</label>
-                <div class="input-container">
-                    <input type="text" id="Email ID" data-type="email" style="text-transform: lowercase;" oninput="handleFieldChange(this)" placeholder="name@domain.com">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-                <span class="error-hint">Invalid email format</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. SALARY BANK ACCOUNT DETAILS -->
-    <section id="salary-bank">
-        <h2>Salary Bank Account Details</h2>
-        <div class="form-grid">
-            <div class="field-group">
-                <label>Salary Account Number</label>
-                <div class="input-container">
-                    <input type="text" id="Salary Account Number" data-type="number" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>IFSC Number</label>
-                <div class="input-container">
-                    <input type="text" id="IFSC Number" data-type="ifsc" maxlength="11" oninput="handleFieldChange(this)" placeholder="ABCD0123456">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-                <span class="error-hint">Pattern: ABCD0123456</span>
-            </div>
-            <div class="field-group" style="grid-column: span 2;">
-                <label>Bank Name and Branch</label>
-                <div class="input-container">
-                    <input type="text" id="Bank Name and Branch" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 4. FAMILY DETAILS AND CONTACT -->
-    <section id="family-details">
-        <h2>Family Details and Contact</h2>
-        <div class="form-grid">
-            <div class="field-group">
-                <label>Father's Name</label>
-                <div class="input-container">
-                    <input type="text" id="Father's Name" data-type="name" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Father's Contact No.</label>
-                <div class="input-container">
-                    <input type="text" id="Father's Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Mother's Name</label>
-                <div class="input-container">
-                    <input type="text" id="Mother's Name" data-type="name" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Mother's Contact No.</label>
-                <div class="input-container">
-                    <input type="text" id="Mother's Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Name of Spouse</label>
-                <div class="input-container">
-                    <input type="text" id="Name of Spouse" data-type="name" oninput="handleFieldChange(this)">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-            <div class="field-group">
-                <label>Contact No. of Spouse</label>
-                <div class="input-container">
-                    <input type="text" id="Contact No. of Spouse" data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
-                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. EDUCATION DETAILS -->
-    <section id="education">
-        <h2>Education Details</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Matric Board</label><div class="input-container"><input type="text" id="Matric Board" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Matriculation Passing Date</label><div class="input-container"><input type="text" id="Matriculation Passing Date" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)" placeholder="DD-MM-YYYY"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Matriculation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Matriculation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>10+2 Board</label><div class="input-container"><input type="text" id="10+2 Board" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>10+2 Stream</label><div class="input-container"><input type="text" id="10+2 Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>10+2 Passing Date</label><div class="input-container"><input type="text" id="10+2 Passing Date" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>10+2 (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="10+2 (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>Graduation Stream</label><div class="input-container"><input type="text" id="Graduation Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Graduation – Main Subject(s)</label><div class="input-container"><input type="text" id="Graduation – Main Subject(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Graduation Completion Date</label><div class="input-container"><input type="text" id="Graduation Completion Date" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Graduation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Graduation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>Post-Graduation Stream</label><div class="input-container"><input type="text" id="Post-Graduation Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Post-Graduation – Main Subject(s)</label><div class="input-container"><input type="text" id="Post-Graduation – Main Subject(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Post-Graduation Completion Date</label><div class="input-container"><input type="text" id="Post-Graduation Completion Date" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Post-Graduation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Post-Graduation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-        </div>
-    </section>
-
-    <!-- 6. PROFESSIONAL EDUCATION -->
-    <section id="professional">
-        <h2>Professional Education</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>B. Ed. Qualified?</label><div class="input-container"><select id="B. Ed. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>If B.Ed. is qualified (Marks)</label><div class="input-container"><input type="text" id="If B.Ed. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of B.Ed.</label><div class="input-container"><input type="text" id="Date of B.Ed." data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>M. Ed. Qualified?</label><div class="input-container"><select id="M. Ed. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>If M.Ed. is qualified (Marks)</label><div class="input-container"><input type="text" id="If M.Ed. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of M.Ed.</label><div class="input-container"><input type="text" id="Date of M.Ed." data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>T.E.T. Qualified?</label><div class="input-container"><select id="T.E.T. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>If T.E.T. is qualified (Marks)</label><div class="input-container"><input type="text" id="If T.E.T. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of T.E.T.</label><div class="input-container"><input type="text" id="Date of T.E.T." data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>J.B.T. Qualified?</label><div class="input-container"><select id="J.B.T. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>If J.B.T. is qualified (Marks)</label><div class="input-container"><input type="text" id="If J.B.T. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of J.B.T.</label><div class="input-container"><input type="text" id="Date of J.B.T." data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><div class="input-container"><input type="text" id="Any other Qualification(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-        </div>
-    </section>
-
-    <!-- 7. APPOINTMENT & SERVICE DETAILS -->
-    <section id="service">
-        <h2>Appointment & Service Details</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Date of First Appointment</label><div class="input-container"><input type="text" id="Date of First Appointment" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Appointment Type</label><div class="input-container"><input type="text" id="Appointment Type" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Designation as per 1st appointment</label><div class="input-container"><input type="text" id="Designation as per 1st appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of Joining as per 1st Appointment</label><div class="input-container"><input type="text" id="Date of Joining as per 1st Appointment" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Place / Station of Joining as per 1st Appointment</label><div class="input-container"><input type="text" id="Place / Station of Joining as per 1st Appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of Regularisation</label><div class="input-container"><input type="text" id="Date of Regularisation" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Designation after Regularisation</label><div class="input-container"><input type="text" id="Designation after Regularisation" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Date of Promotion</label><div class="input-container"><input type="text" id="Date of Promotion" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Designation after Promotion</label><div class="input-container"><input type="text" id="Designation after Promotion" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Place / Station of Joining after Promotion</label><div class="input-container"><input type="text" id="Place / Station of Joining after Promotion" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>Retirement Date</label><div class="input-container"><input type="text" id="Retirement Date" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-        </div>
-    </section>
-
-    <!-- 8. STATION HISTORY -->
-    <section id="station-history">
-        <h2>Station History</h2>
-        <div class="form-grid">
-            <div class="field-group"><label>Previous Station # 1</label><div class="input-container"><input type="text" id="Previous Station # 1" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>From Date # 1</label><div class="input-container"><input type="text" id="From Date # 1" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>To date # 1</label><div class="input-container"><input type="text" id="To date # 1" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>Previous Station # 2</label><div class="input-container"><input type="text" id="Previous Station # 2" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>From Date # 2</label><div class="input-container"><input type="text" id="From Date # 2" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>To date # 2</label><div class="input-container"><input type="text" id="To date # 2" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            
-            <div class="field-group"><label>Previous Station # 3</label><div class="input-container"><input type="text" id="Previous Station # 3" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>From Date # 3</label><div class="input-container"><input type="text" id="From Date # 3" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-            <div class="field-group"><label>To date # 3</label><div class="input-container"><input type="text" id="To date # 3" data-type="date-flex" oninput="maskDateFlex(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
-        </div>
-    </section>
-
-</div>
+<div id="toast"></div>
 
 <script>
-    // FINAL DEPLOYED URL
-    const SURL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
+    // --- INTEGRATED URL ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
+    
+    let SCHEMA = [];
+    let LOGGED_IN_PMIS = "";
+    let isBusy = false;
 
-    const VALIDATION_RULES = {
-        name: /^[A-Z\s.]{2,50}$/i,
-        dateFixed: /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-(19|20)\d\d$/,
-        dateFlex: /^(\d{4})|((0[1-9]|1[012])-\d{4})|((0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-(19|20)\d\d)$/,
-        aadhaar: /^\d{4}\s\d{4}\s\d{4}$/,
-        mobile: /^\d{5}-\d{5}$/,
-        pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i,
-        ifsc: /^[A-Z]{4}0[A-Z0-9]{6}$/i,
-        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        number: /^\d+$/
+    // --- SYSTEM LOAD ---
+    window.onload = async () => {
+        const res = await apiRequest({ action: "getSchema" });
+        if(res.fields) {
+            SCHEMA = res.fields;
+            console.log("Schema Initialized:", SCHEMA.length, "fields found.");
+        }
     };
 
-    // --- AUTHENTICATION & LOADING ---
-    async function loadEmployeeData() {
-        const pmis = document.getElementById('global_pmis').value;
+    async function apiRequest(body) {
+        try {
+            const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(body) });
+            return await r.json();
+        } catch(e) { notify("Backend connection failed."); return {status:"error"}; }
+    }
+
+    function notify(m) {
+        const t = document.getElementById('toast');
+        t.innerText = m; t.style.display = 'block';
+        setTimeout(() => t.style.display='none', 3500);
+    }
+
+    // --- UI RENDERER ---
+    function buildUI(userData = {}) {
+        const view = document.getElementById('mainView');
+        const nav = document.getElementById('dynamicNav');
+        view.innerHTML = ""; nav.innerHTML = "";
+
+        const sections = [...new Set(SCHEMA.map(f => f.Section))].filter(Boolean);
+        
+        sections.forEach((sec, idx) => {
+            const link = document.createElement('a');
+            link.href = `#sec-${idx}`;
+            link.className = `nav-item ${idx === 0 ? 'active' : ''}`;
+            link.innerText = sec;
+            nav.appendChild(link);
+
+            const card = document.createElement('section');
+            card.id = `sec-${idx}`;
+            card.className = "card";
+            card.innerHTML = `<h2>${sec}</h2>`;
+            const grid = document.createElement('div');
+            grid.className = "grid";
+
+            SCHEMA.filter(f => f.Section === sec).forEach(f => {
+                grid.appendChild(renderField(f, userData[f["Field Name"]] || ""));
+            });
+
+            card.appendChild(grid);
+            view.appendChild(card);
+        });
+
+        setupScrollSpy();
+    }
+
+    function renderField(f, val) {
+        const div = document.createElement('div');
+        div.className = "field";
+        const label = f.Label || f["Field Name"];
+        div.innerHTML = `<label>${label}${f.Type === 'Marks' ? '<span class="pct-badge" id="pct-'+f["Field Name"]+'"></span>' : ''}</label>`;
+        
+        const wrap = document.createElement('div');
+        wrap.className = "input-wrap";
+
+        let input;
+        if(f.Type === 'Yes/No' || f.Options) {
+            input = document.createElement('select');
+            const options = f.Options ? f.Options.split(',') : ["YES", "NO"];
+            input.innerHTML = `<option value="">SELECT</option>` + options.map(o => `<option value="${o.trim()}">${o.trim()}</option>`).join('');
+        } else if(f.Type === 'Paragraph') {
+            input = document.createElement('textarea');
+            input.rows = 1;
+        } else {
+            input = document.createElement('input');
+            input.type = "text";
+        }
+
+        input.id = f["Field Name"];
+        input.value = val;
+        if(f.MaxChars) input.maxLength = f.MaxChars;
+        if(f.Type === 'Email') input.style.textTransform = "lowercase";
+
+        input.oninput = () => {
+            wrap.querySelector('.save-btn').style.display = "block";
+            if(f.Type === 'Date') maskDate(input);
+            if(f.Type === 'Mobile') maskMobile(input);
+            if(f.Type === 'Aadhaar') maskAadhaar(input);
+            if(f.Type === 'Marks') calculatePct(input.value, f["Field Name"]);
+            if(f.Type === 'Yes/No' && input.value === 'NO') applyNoLogic(f);
+        };
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = "save-btn";
+        saveBtn.innerText = "SAVE";
+        saveBtn.onclick = () => saveAtomic(input);
+
+        const status = document.createElement('div');
+        status.className = "sync-badge";
+
+        wrap.appendChild(input);
+        wrap.appendChild(saveBtn);
+        wrap.appendChild(status);
+        div.appendChild(wrap);
+
+        if(f.Type === 'Marks' && val) calculatePct(val, f["Field Name"]);
+        return div;
+    }
+
+    // --- CORE LOGIC ---
+    async function appAction(action) {
+        const pmis = document.getElementById('auth_pmis').value;
         const dob = document.getElementById('auth_dob').value;
-        const btn = document.getElementById('loadBtn');
-        const status = document.getElementById('statusIndicator');
+        if(pmis.length < 5 || dob.length < 10) return notify("Enter PMIS (5 digits) & D.O.B (DD-MM-YYYY).");
 
-        if (pmis.length !== 5) return alert("PMIS must be 5 digits.");
-        if (!VALIDATION_RULES.dateFixed.test(dob)) return alert("Authenticate using DD-MM-YYYY format.");
-
-        btn.disabled = true;
-        status.innerText = "AUTHENTICATING...";
-        status.style.color = "orange";
-
-        try {
-            const response = await fetch(SURL, {
-                method: "POST",
-                body: JSON.stringify({ action: "fetchRecord", pmisCode: pmis, dob: dob })
-            });
-            const data = await response.json();
-
-            if (data.status === "found") {
-                Object.keys(data).forEach(key => {
-                    const el = document.getElementById(key);
-                    if (el) el.value = data[key];
-                });
-                status.innerText = "RECORD LOADED";
-                status.style.color = "var(--success)";
-                
-                // Hide all save buttons after loading fresh data
-                document.querySelectorAll('.save-btn-manual').forEach(b => b.style.display = 'none');
-                document.querySelectorAll('.status-badge').forEach(s => s.innerText = '');
-                document.querySelectorAll('input, select, textarea').forEach(i => i.classList.remove('invalid'));
-            } else {
-                status.innerText = "AUTH FAILED";
-                status.style.color = "var(--error)";
-                alert(data.message || "Authentication failed. Check PMIS Code and D.O.B.");
-            }
-        } catch (e) {
-            status.innerText = "CONNECTION ERROR";
-            console.error(e);
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    // --- FIELD CHANGE & SAVE LOGIC ---
-    function handleFieldChange(el) {
-        const container = el.closest('.input-container');
-        const saveBtn = container.querySelector('.save-btn-manual');
-        const type = el.getAttribute('data-type');
-        const val = el.value.trim();
-
-        let isValid = true;
-        if (val !== "") {
-            if (type === "date-flex") isValid = VALIDATION_RULES.dateFlex.test(val);
-            else if (type && VALIDATION_RULES[type]) isValid = VALIDATION_RULES[type].test(val);
-        }
-
-        if (!isValid) {
-            el.classList.add('invalid');
-            saveBtn.style.display = 'none';
+        setBusy(true);
+        const res = await apiRequest({ action, pmisCode: pmis, dob: dob });
+        if(res.status === "found") {
+            LOGGED_IN_PMIS = pmis;
+            buildUI(res);
+            notify("Record Loaded.");
+        } else if(res.status === "success") {
+            notify(res.message || "Action Successful.");
         } else {
-            el.classList.remove('invalid');
-            saveBtn.style.display = 'block'; // Manual save button appears on valid change
+            notify(res.message || "Error occurred.");
         }
+        setBusy(false);
     }
 
-    async function manualSave(btn) {
-        const container = btn.closest('.input-container');
-        const input = container.querySelector('input, select, textarea');
-        const badge = container.querySelector('.status-badge');
-        const pmis = document.getElementById('global_pmis').value;
+    async function saveAtomic(el) {
+        if(isBusy) return;
+        const btn = el.parentNode.querySelector('.save-btn');
+        const badge = el.parentNode.querySelector('.sync-badge');
+        
+        setBusy(true);
+        btn.style.display = "none";
+        badge.innerHTML = '<span class="spin">⏳</span>';
 
-        if (!pmis) return alert("Authenticate first.");
+        const res = await apiRequest({
+            action: "atomicUpdate",
+            pmisCode: LOGGED_IN_PMIS,
+            fieldName: el.id,
+            value: el.value
+        });
 
-        btn.style.display = 'none';
-        badge.innerText = '⏳';
-        badge.className = 'status-badge saving';
-
-        try {
-            const response = await fetch(SURL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "atomicUpdate",
-                    pmisCode: pmis,
-                    fieldName: input.id,
-                    value: input.value
-                })
-            });
-            const res = await response.json();
-
-            if (res.status === "success") {
-                badge.innerText = '✅';
-                badge.className = 'status-badge';
-                setTimeout(() => { badge.innerText = ''; }, 3000);
-            } else {
-                throw new Error(res.message);
-            }
-        } catch (e) {
-            badge.innerText = '❌';
-            btn.style.display = 'block';
-            console.error(e);
-        }
-    }
-
-    // --- INPUT MASKS ---
-    function maskDate(el) {
-        let v = el.value.replace(/\D/g, '').slice(0, 8);
-        if (v.length >= 2) v = v.slice(0, 2) + '-' + v.slice(2);
-        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
-        el.value = v;
-    }
-
-    function maskDateFlex(el) {
-        let v = el.value.replace(/\D/g, '').slice(0, 8);
-        // Supports YYYY, MM-YYYY, DD-MM-YYYY
-        if (v.length > 4 && v.length <= 6) {
-            el.value = v.slice(0, 2) + '-' + v.slice(2);
-        } else if (v.length > 6) {
-            el.value = v.slice(0, 2) + '-' + v.slice(2, 4) + '-' + v.slice(4);
+        if(res.status === "success") {
+            badge.innerText = "✅";
+            setTimeout(() => badge.innerText = "", 2500);
         } else {
-            el.value = v;
+            badge.innerText = "❌";
+            btn.style.display = "block";
+            notify(res.message);
+        }
+        setBusy(false);
+    }
+
+    function setBusy(val) {
+        isBusy = val;
+        document.querySelectorAll('.btn, .save-btn').forEach(b => b.disabled = val);
+    }
+
+    // --- HELPERS ---
+    function maskDate(e) {
+        let v = e.value.replace(/\D/g,'').slice(0,8);
+        if(v.length >= 2) v = v.slice(0,2) + '-' + v.slice(2);
+        if(v.length >= 5) v = v.slice(0,5) + '-' + v.slice(5);
+        e.value = v;
+    }
+    function maskMobile(e) {
+        let v = e.value.replace(/\D/g,'').slice(0,10);
+        if(v.length >= 5) v = v.slice(0,5) + '-' + v.slice(5);
+        e.value = v;
+    }
+    function maskAadhaar(e) {
+        let v = e.value.replace(/\D/g,'').slice(0,12);
+        let m = v.match(/.{1,4}/g); e.value = m ? m.join(' ') : v;
+    }
+    function calculatePct(val, id) {
+        const badge = document.getElementById('pct-'+id);
+        if(!badge || !val.includes('/')) { if(badge) badge.innerText=""; return; }
+        const parts = val.split('/');
+        const obs = parseFloat(parts[0]); const tot = parseFloat(parts[1]);
+        if(!isNaN(obs) && !isNaN(tot) && tot > 0) badge.innerText = ((obs/tot)*100).toFixed(2) + "%";
+    }
+
+    function applyNoLogic(f) {
+        const myIdx = SCHEMA.indexOf(f);
+        // Wipe and disable next 2 fields if they are linked marks/date
+        for(let i=1; i<=2; i++) {
+            const next = SCHEMA[myIdx + i];
+            if(next && next.Section === f.Section) {
+                const el = document.getElementById(next["Field Name"]);
+                if(el) { el.value = ""; el.disabled = true; }
+            }
         }
     }
 
-    function maskAadhaar(el) {
-        let v = el.value.replace(/\D/g, '').slice(0, 12);
-        let m = v.match(/.{1,4}/g);
-        el.value = m ? m.join(' ') : v;
+    function setupScrollSpy() {
+        window.onscroll = () => {
+            let active = "";
+            document.querySelectorAll('.card').forEach(s => {
+                if(window.pageYOffset >= (s.offsetTop - 180)) active = s.id;
+            });
+            document.querySelectorAll('.nav-item').forEach(l => {
+                l.classList.toggle('active', l.href.includes(active));
+            });
+        };
     }
 
-    function maskMobile(el) {
-        let v = el.value.replace(/\D/g, '').slice(0, 10);
-        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
-        el.value = v;
+    // --- ADMIN ---
+    function toggleAdmin(show) { document.getElementById('adminOverlay').style.display = show ? 'flex' : 'none'; }
+    async function authAdmin() {
+        const p = document.getElementById('adminPass').value;
+        const res = await apiRequest({ action: "adminAuth", password: p });
+        if(res.authorized) {
+            notify("Authorized. Open your Google Sheet to manage App_Config.");
+            toggleAdmin(false);
+        } else {
+            notify("Invalid Master Password.");
+        }
     }
-
-    // Keyboard Filters
-    document.querySelectorAll('input[data-type="name"]').forEach(el => {
-        el.onkeypress = (e) => { if (!/[a-zA-Z\s.]/.test(e.key)) e.preventDefault(); };
-    });
-    document.querySelectorAll('input[data-type="number"]').forEach(el => {
-        el.onkeypress = (e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); };
-    });
 </script>
 </body>
 </html>
