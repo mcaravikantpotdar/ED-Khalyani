@@ -6,203 +6,80 @@
     <title>PMIS Employee Update Portal</title>
     <style>
         :root {
-            --primary: #1a73e8;
-            --success: #34a853;
-            --error: #ea4335;
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --border: #dadce0;
-            --text-main: #202124;
-            --text-secondary: #5f6368;
+            --primary: #1a73e8; --success: #34a853; --error: #ea4335;
+            --bg: #f8f9fa; --card-bg: #ffffff; --border: #dadce0;
+            --text-main: #202124; --text-secondary: #5f6368;
         }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            background: var(--bg);
-            color: var(--text-main);
-            scroll-behavior: smooth;
-        }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text-main); scroll-behavior: smooth; }
 
         /* --- STICKY HEADER --- */
         .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: sticky; top: 0; z-index: 1000; background: white; 
+            border-bottom: 1px solid var(--border); padding: 12px 24px; 
+            display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         
-        .pmis-input-wrapper {
-            display: flex;
-            align-items: center;
-            background: #f1f3f4;
-            border-radius: 4px;
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            transition: border 0.3s;
-        }
+        .pmis-input-wrapper { display: flex; align-items: center; background: #f1f3f4; border-radius: 4px; padding: 4px 8px; border: 1px solid var(--border); transition: border 0.3s; }
         .pmis-input-wrapper label { font-size: 0.75rem; font-weight: bold; margin-right: 8px; color: var(--text-secondary); }
-        .pmis-box {
-            border: none;
-            background: transparent;
-            font-weight: bold;
-            width: 85px;
-            text-align: center;
-            font-size: 1rem;
-            color: var(--primary);
-            outline: none;
-        }
+        .pmis-box { border: none; background: transparent; font-weight: bold; width: 85px; text-align: center; font-size: 1rem; color: var(--primary); outline: none; }
 
-        .btn-load {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
+        .btn-load { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         .btn-load:hover { background: #1557b0; }
         .btn-load:disabled { background: #ccc; cursor: not-allowed; }
 
         /* --- STICKY NAV --- */
         .nav-bar {
-            position: sticky;
-            top: 65px;
-            z-index: 999;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 0 15px;
+            position: sticky; top: 65px; z-index: 999; background: white; 
+            border-bottom: 1px solid var(--border); display: flex; 
+            overflow-x: auto; white-space: nowrap; padding: 0 15px;
         }
-        .nav-item {
-            padding: 15px 20px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            border-bottom: 3px solid transparent;
-        }
-        .nav-item:hover, .nav-item.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
+        .nav-item { padding: 15px 20px; text-decoration: none; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; border-bottom: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* --- CONTENT LAYOUT --- */
-        .content-wrapper {
-            max-width: 1100px;
-            margin: 20px auto;
-            padding: 0 15px;
-            padding-bottom: 100px;
-        }
-        section {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid var(--border);
-        }
-        h2 {
-            margin: 0 0 25px 0;
-            color: var(--primary);
-            font-size: 1.3rem;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
+        .content-wrapper { max-width: 1100px; margin: 20px auto; padding: 0 15px; padding-bottom: 100px; }
+        section { background: var(--card-bg); border-radius: 8px; padding: 30px; margin-bottom: 40px; border: 1px solid var(--border); }
+        h2 { margin: 0 0 25px 0; color: var(--primary); font-size: 1.3rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px 40px;
-        }
-        .field-group {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px; }
+        .field-group { position: relative; display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
 
+        /* --- INPUTS & MANUAL SAVE BUTTONS --- */
+        .input-container { position: relative; display: flex; align-items: center; gap: 8px; }
+        
         input, select, textarea {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            outline: none;
-            text-transform: uppercase;
-            transition: all 0.2s;
+            padding: 12px; border: 1px solid var(--border); border-radius: 4px;
+            font-size: 1rem; width: 100%; box-sizing: border-box; outline: none;
+            text-transform: uppercase; transition: all 0.2s;
         }
-        input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(26,115,232,0.1);
-        }
-        input.invalid {
-            border-color: var(--error);
-            background-color: #fff8f8;
-        }
-        input[readonly] {
-            background: #f1f3f4;
-            cursor: not-allowed;
-            color: #5f6368;
-        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        input.invalid { border-color: var(--error); background-color: #fff8f8; }
+        input[readonly] { background: #f1f3f4; cursor: not-allowed; color: #5f6368; }
 
-        .error-hint {
-            font-size: 0.7rem;
-            color: var(--error);
-            margin-top: 4px;
-            display: none;
-            font-weight: 500;
-        }
-        input.invalid + .error-hint { display: block; }
+        .error-hint { font-size: 0.7rem; color: var(--error); margin-top: 4px; display: none; font-weight: 500; }
+        input.invalid ~ .error-hint { display: block; }
 
-        /* --- STATUS ICONS --- */
-        .atomic-status {
-            position: absolute;
-            right: -32px;
-            top: 36px;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
+        .save-btn-manual {
+            background: var(--success); color: white; border: none; 
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            font-weight: bold; font-size: 0.75rem; display: none;
+            animation: fadeIn 0.3s; white-space: nowrap;
         }
-        .atomic-status.dirty { color: var(--primary); }
-        .atomic-status.saving { color: orange; animation: spin 1s infinite linear; }
-        .atomic-status.synced { color: var(--success); }
-        .atomic-status.error { color: var(--error); }
+        .save-btn-manual:hover { background: #2d8c47; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 
+        .status-badge { font-size: 1.1rem; min-width: 24px; text-align: center; }
+        .status-badge.saving { animation: spin 1s infinite linear; display: inline-block; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         @media (max-width: 850px) {
             .form-grid { grid-template-columns: 1fr; }
-            .atomic-status {
-                right: 8px;
-                top: 8px;
-                background: white;
-                border-radius: 50%;
-                width: 20px;
-                height: 20px;
-                font-size: 0.9rem;
-            }
             .sticky-header { flex-direction: column; padding: 10px; gap: 10px; }
             .nav-bar { top: 140px; }
         }
@@ -231,7 +108,8 @@
     <a href="#section3" class="nav-item">Family</a>
     <a href="#section4" class="nav-item">Finance</a>
     <a href="#section5" class="nav-item">Academic</a>
-    <a href="#section6" class="nav-item">Service</a>
+    <a href="#section6" class="nav-item">Professional</a>
+    <a href="#section7" class="nav-item">Service</a>
 </div>
 
 <div class="content-wrapper">
@@ -242,108 +120,254 @@
         <div class="form-grid">
             <div class="field-group">
                 <label>Full Name</label>
-                <input type="text" id="Full Name" data-type="name" onblur="validateAndSave(this)">
-                <span class="error-hint">Only letters, dots, and spaces allowed</span>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="Full Name" data-type="name" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>Gender</label>
-                <select id="Gender" onchange="validateAndSave(this)">
-                    <option value="">SELECT</option>
-                    <option value="MALE">MALE</option>
-                    <option value="FEMALE">FEMALE</option>
-                </select>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <select id="Gender" onchange="handleFieldChange(this)">
+                        <option value="">SELECT</option>
+                        <option value="MALE">MALE</option>
+                        <option value="FEMALE">FEMALE</option>
+                    </select>
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>Designation</label>
-                <input type="text" id="Designation" onblur="validateAndSave(this)">
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="Designation" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>Date of Birth</label>
+                <div class="input-container">
+                    <input type="text" id="D.O.B." data-type="date" oninput="maskDate(this); handleFieldChange(this)" placeholder="DD-MM-YYYY">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>PMIS Code</label>
                 <input type="text" id="PMIS Code" readonly>
             </div>
             <div class="field-group">
-                <label>Date of Birth</label>
-                <input type="text" id="D.O.B." data-type="date" oninput="maskDate(this)" onblur="validateAndSave(this)" placeholder="DD-MM-YYYY">
-                <span class="error-hint">Format: DD-MM-YYYY</span>
-                <div class="atomic-status"></div>
+                <label>Blood Group</label>
+                <div class="input-container">
+                    <select id="Blood Group" onchange="handleFieldChange(this)">
+                        <option value="">SELECT</option>
+                        <option value="A+">A+</option><option value="A-">A-</option>
+                        <option value="B+">B+</option><option value="B-">B-</option>
+                        <option value="O+">O+</option><option value="O-">O-</option>
+                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                    </select>
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>Social Category</label>
-                <select id="Social Category" onchange="validateAndSave(this)">
-                    <option value="">SELECT</option>
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="OBC">OBC</option>
-                </select>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <select id="Social Category" onchange="handleFieldChange(this)">
+                        <option value="">SELECT</option>
+                        <option value="GENERAL">GENERAL</option>
+                        <option value="SC">SC</option><option value="ST">ST</option><option value="OBC">OBC</option>
+                    </select>
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
-                <label>Blood Group</label>
-                <select id="Blood Group" onchange="validateAndSave(this)">
-                    <option value="">SELECT</option>
-                    <option value="A+">A+</option><option value="A-">A-</option>
-                    <option value="B+">B+</option><option value="B-">B-</option>
-                    <option value="O+">O+</option><option value="O-">O-</option>
-                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                </select>
-                <div class="atomic-status"></div>
+                <label>Identification Mark</label>
+                <div class="input-container">
+                    <input type="text" id="Identification Mark" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- II. IDENTITY -->
+    <!-- II. IDENTITY & CONTACT -->
     <section id="section2">
         <h2>II. Identity & Contact</h2>
         <div class="form-grid">
             <div class="field-group">
+                <label>IP-Number</label>
+                <div class="input-container">
+                    <input type="text" id="IP-Number" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>GPF / PRAN No</label>
+                <div class="input-container">
+                    <input type="text" id="GPF / PRAN No" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group">
                 <label>Aadhaar Number</label>
-                <input type="text" id="Aadhaar Number" data-type="aadhaar" oninput="maskAadhaar(this)" onblur="validateAndSave(this)" placeholder="0000 0000 0000">
-                <span class="error-hint">Requires exactly 12 digits</span>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="Aadhaar Number" data-type="aadhaar" oninput="maskAadhaar(this); handleFieldChange(this)" placeholder="0000 0000 0000">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>PAN Number</label>
-                <input type="text" id="PAN Number" data-type="pan" maxlength="10" onblur="validateAndSave(this)" placeholder="ABCDE1234F">
-                <span class="error-hint">Invalid format (Example: ABCDE1234F)</span>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="PAN Number" data-type="pan" maxlength="10" oninput="handleFieldChange(this)" placeholder="ABCDE1234F">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>Personal Contact No.</label>
-                <input type="text" id="Personal Contact No." data-type="mobile" oninput="maskMobile(this)" onblur="validateAndSave(this)" placeholder="00000-00000">
-                <span class="error-hint">Requires exactly 10 digits</span>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="Personal Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)" placeholder="00000-00000">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
-                <label>Email ID</label>
-                <input type="text" id="Email ID" data-type="email" style="text-transform: lowercase;" onblur="validateAndSave(this)" placeholder="name@domain.com">
-                <span class="error-hint">Invalid email format</span>
-                <div class="atomic-status"></div>
+                <label>WhatsApp No.</label>
+                <div class="input-container">
+                    <input type="text" id="WhatsApp No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
+            <div class="field-group">
+                <label>Alternate Contact No.</label>
+                <div class="input-container">
+                    <input type="text" id="Alternate Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>Emergency Contact No.</label>
+                <div class="input-container">
+                    <input type="text" id="Emergency Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group" style="grid-column: span 2;">
+                <label>Email ID</label>
+                <div class="input-container">
+                    <input type="text" id="Email ID" data-type="email" style="text-transform: lowercase;" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- III. FAMILY & ADDRESS -->
+    <section id="section3">
+        <h2>III. Family & Address</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Father's Name</label><div class="input-container"><input type="text" id="Father's Name" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Father's Contact No.</label><div class="input-container"><input type="text" id="Father's Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Mother's Name</label><div class="input-container"><input type="text" id="Mother's Name" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Mother's Contact No.</label><div class="input-container"><input type="text" id="Mother's Contact No." data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Name of Spouse</label><div class="input-container"><input type="text" id="Name of Spouse" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Contact No. of Spouse</label><div class="input-container"><input type="text" id="Contact No. of Spouse" data-type="mobile" oninput="maskMobile(this); handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Permanent Address</label><div class="input-container"><textarea id="Permanent Address" oninput="handleFieldChange(this)" rows="2"></textarea><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Present Address</label><div class="input-container"><textarea id="Present Address" oninput="handleFieldChange(this)" rows="2"></textarea><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>LTC Home Town</label><div class="input-container"><input type="text" id="LTC Home Town" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
         </div>
     </section>
 
     <!-- IV. FINANCE -->
     <section id="section4">
-        <h2>IV. Finance</h2>
+        <h2>IV. Banking & Finance</h2>
         <div class="form-grid">
             <div class="field-group">
                 <label>Salary Account Number</label>
-                <input type="text" id="Salary Account Number" data-type="number" onblur="validateAndSave(this)">
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="Salary Account Number" data-type="number" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
             <div class="field-group">
                 <label>IFSC Number</label>
-                <input type="text" id="IFSC Number" data-type="ifsc" maxlength="11" onblur="validateAndSave(this)" placeholder="ABCD0123456">
-                <span class="error-hint">Format: ABCD0123456 (11 chars)</span>
-                <div class="atomic-status"></div>
+                <div class="input-container">
+                    <input type="text" id="IFSC Number" data-type="ifsc" maxlength="11" oninput="handleFieldChange(this)" placeholder="ABCD0123456">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
+            </div>
+            <div class="field-group" style="grid-column: span 2;">
+                <label>Bank Name and Branch</label>
+                <div class="input-container">
+                    <input type="text" id="Bank Name and Branch" oninput="handleFieldChange(this)">
+                    <button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span>
+                </div>
             </div>
         </div>
     </section>
 
+    <!-- V. ACADEMIC -->
+    <section id="section5">
+        <h2>V. Academic Qualifications</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Matric Board</label><div class="input-container"><input type="text" id="Matric Board" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Matriculation Passing Date</label><div class="input-container"><input type="text" id="Matriculation Passing Date" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group" style="grid-column: span 2;"><label>Matriculation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Matriculation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            
+            <div class="field-group"><label>10+2 Board</label><div class="input-container"><input type="text" id="10+2 Board" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>10+2 Stream</label><div class="input-container"><input type="text" id="10+2 Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>10+2 Passing Date</label><div class="input-container"><input type="text" id="10+2 Passing Date" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>10+2 (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="10+2 (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group"><label>Graduation Stream</label><div class="input-container"><input type="text" id="Graduation Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Graduation – Main Subject(s)</label><div class="input-container"><input type="text" id="Graduation – Main Subject(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Graduation Completion Date</label><div class="input-container"><input type="text" id="Graduation Completion Date" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Graduation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Graduation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group"><label>Post-Graduation Stream</label><div class="input-container"><input type="text" id="Post-Graduation Stream" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Post-Graduation – Main Subject(s)</label><div class="input-container"><input type="text" id="Post-Graduation – Main Subject(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Post-Graduation Completion Date</label><div class="input-container"><input type="text" id="Post-Graduation Completion Date" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Post-Graduation (Marks Obtained/Total Marks)</label><div class="input-container"><input type="text" id="Post-Graduation (Marks Obtained/Total Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+        </div>
+    </section>
+
+    <!-- VI. PROFESSIONAL -->
+    <section id="section6">
+        <h2>VI. Professional Qualifications</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>B. Ed. Qualified?</label><div class="input-container"><select id="B. Ed. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>If B.Ed. is qualified (Marks)</label><div class="input-container"><input type="text" id="If B.Ed. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of B.Ed.</label><div class="input-container"><input type="text" id="Date of B.Ed." oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group"><label>M. Ed. Qualified?</label><div class="input-container"><select id="M. Ed. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>If M.Ed. is qualified (Marks)</label><div class="input-container"><input type="text" id="If M.Ed. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of M.Ed.</label><div class="input-container"><input type="text" id="Date of M.Ed." oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group"><label>T.E.T. Qualified?</label><div class="input-container"><select id="T.E.T. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>If T.E.T. is qualified (Marks)</label><div class="input-container"><input type="text" id="If T.E.T. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of T.E.T.</label><div class="input-container"><input type="text" id="Date of T.E.T." oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group"><label>J.B.T. Qualified?</label><div class="input-container"><select id="J.B.T. Qualified?" onchange="handleFieldChange(this)"><option value="">SELECT</option><option value="YES">YES</option><option value="NO">NO</option></select><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>If J.B.T. is qualified (Marks)</label><div class="input-container"><input type="text" id="If J.B.T. is qualified (Marks)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of J.B.T.</label><div class="input-container"><input type="text" id="Date of J.B.T." oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+
+            <div class="field-group" style="grid-column: span 2;"><label>Any other Qualification(s)</label><div class="input-container"><input type="text" id="Any other Qualification(s)" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+        </div>
+    </section>
+
+    <!-- VII. SERVICE -->
+    <section id="section7">
+        <h2>VII. Service History</h2>
+        <div class="form-grid">
+            <div class="field-group"><label>Date of First Appointment</label><div class="input-container"><input type="text" id="Date of First Appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Appointment Type</label><div class="input-container"><input type="text" id="Appointment Type" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Designation as per 1st appointment</label><div class="input-container"><input type="text" id="Designation as per 1st appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of Joining as per 1st Appointment</label><div class="input-container"><input type="text" id="Date of Joining as per 1st Appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Place / Station of Joining as per 1st Appointment</label><div class="input-container"><input type="text" id="Place / Station of Joining as per 1st Appointment" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of Regularisation</label><div class="input-container"><input type="text" id="Date of Regularisation" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Designation after Regularisation</label><div class="input-container"><input type="text" id="Designation after Regularisation" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Date of Promotion</label><div class="input-container"><input type="text" id="Date of Promotion" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Designation after Promotion</label><div class="input-container"><input type="text" id="Designation after Promotion" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Place / Station of Joining after Promotion</label><div class="input-container"><input type="text" id="Place / Station of Joining after Promotion" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+            <div class="field-group"><label>Retirement Date</label><div class="input-container"><input type="text" id="Retirement Date" oninput="handleFieldChange(this)"><button class="save-btn-manual" onclick="manualSave(this)">SAVE</button><span class="status-badge"></span></div></div>
+        </div>
+    </section>
 </div>
 
 <script>
@@ -360,15 +384,14 @@
         number: /^\d+$/
     };
 
-    // --- AUTHENTICATION & LOADING ---
     async function loadEmployeeData() {
         const pmis = document.getElementById('global_pmis').value;
         const dob = document.getElementById('auth_dob').value;
         const btn = document.getElementById('loadBtn');
         const status = document.getElementById('statusIndicator');
 
-        if (pmis.length !== 5) return alert("PMIS Code must be exactly 5 digits.");
-        if (!VALIDATION_RULES.date.test(dob)) return alert("Please enter D.O.B. as DD-MM-YYYY for authentication.");
+        if (pmis.length !== 5) return alert("PMIS must be 5 digits.");
+        if (dob.length !== 10) return alert("Invalid D.O.B format.");
 
         btn.disabled = true;
         status.innerText = "AUTHENTICATING...";
@@ -388,15 +411,12 @@
                 });
                 status.innerText = "RECORD LOADED";
                 status.style.color = "var(--success)";
-                
-                // Set the readonly PMIS field inside the form
-                const formPmis = document.getElementById('PMIS Code');
-                if (formPmis) formPmis.value = pmis;
-
+                document.querySelectorAll('.save-btn-manual').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.status-badge').forEach(s => s.innerText = '');
             } else {
                 status.innerText = "AUTH FAILED";
                 status.style.color = "var(--error)";
-                alert(data.message || "Authentication failed. Check PMIS Code and D.O.B.");
+                alert(data.message || "Record not found.");
             }
         } catch (e) {
             status.innerText = "CONNECTION ERROR";
@@ -406,74 +426,64 @@
         }
     }
 
-    // --- VALIDATION & ATOMIC SAVE ---
-    function validateAndSave(el) {
+    function handleFieldChange(el) {
+        const container = el.closest('.input-container');
+        const saveBtn = container.querySelector('.save-btn-manual');
         const type = el.getAttribute('data-type');
         const val = el.value.trim();
-        const icon = el.closest('.field-group').querySelector('.atomic-status');
-
-        if (val === "") {
-            el.classList.remove('invalid');
-            return;
-        }
 
         let isValid = true;
         if (type && VALIDATION_RULES[type]) {
             isValid = VALIDATION_RULES[type].test(val);
         }
 
-        if (!isValid) {
+        if (!isValid && val !== "") {
             el.classList.add('invalid');
-            icon.innerText = "❌";
-            icon.className = "atomic-status error";
-            return;
+            saveBtn.style.display = 'none';
+        } else {
+            el.classList.remove('invalid');
+            saveBtn.style.display = 'block';
         }
-
-        el.classList.remove('invalid');
-        performAtomicSave(el, icon);
     }
 
-    async function performAtomicSave(inputEl, iconEl) {
+    async function manualSave(btn) {
+        const container = btn.closest('.input-container');
+        const input = container.querySelector('input, select, textarea');
+        const badge = container.querySelector('.status-badge');
         const pmis = document.getElementById('global_pmis').value;
-        if (!pmis || pmis.length !== 5) return;
 
-        iconEl.innerText = "⏳";
-        iconEl.className = "atomic-status saving";
+        if (!pmis) return alert("Authenticate first.");
 
-        const payload = {
-            action: "atomicUpdate",
-            pmisCode: pmis,
-            fieldName: inputEl.id,
-            value: inputEl.value
-        };
+        btn.style.display = 'none';
+        badge.innerText = '⏳';
+        badge.className = 'status-badge saving';
 
         try {
             await fetch(SURL, {
                 method: "POST",
                 mode: "no-cors",
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    action: "atomicUpdate",
+                    pmisCode: pmis,
+                    fieldName: input.id,
+                    value: input.value
+                })
             });
 
             setTimeout(() => {
-                iconEl.innerText = "✅";
-                iconEl.className = "atomic-status synced";
-                setTimeout(() => { if (iconEl.className === "atomic-status synced") iconEl.innerText = ""; }, 2000);
+                badge.innerText = '✅';
+                badge.className = 'status-badge synced';
+                setTimeout(() => { badge.innerText = ''; }, 2000);
             }, 600);
         } catch (e) {
-            iconEl.innerText = "❌";
-            iconEl.className = "atomic-status error";
+            badge.innerText = '❌';
+            btn.style.display = 'block';
         }
     }
 
-    // --- FORMATTING MASKS ---
     function maskDate(el) {
         let v = el.value.replace(/\D/g, '').slice(0, 8);
         if (v.length >= 2) v = v.slice(0, 2) + '-' + v.slice(2);
-        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
-        el.value = v;
-    }
-    function maskMobile(el) {
-        let v = el.value.replace(/\D/g, '').slice(0, 10);
         if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
         el.value = v;
     }
@@ -482,11 +492,11 @@
         let m = v.match(/.{1,4}/g);
         el.value = m ? m.join(' ') : v;
     }
-
-    // Keyboard Filters
-    document.querySelectorAll('input[data-type="name"]').forEach(el => {
-        el.onkeypress = (e) => { if (!/[a-zA-Z\s.]/.test(e.key)) e.preventDefault(); };
-    });
+    function maskMobile(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 10);
+        if (v.length >= 5) v = v.slice(0, 5) + '-' + v.slice(5);
+        el.value = v;
+    }
 </script>
 </body>
 </html>
