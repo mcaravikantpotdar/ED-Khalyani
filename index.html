@@ -65,7 +65,7 @@
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .card h2 { margin: 0 0 20px 0; color: var(--primary); font-size: 18px; border-bottom: 1px solid #f1f3f4; padding-bottom: 12px; }
 
-        /* --- EMPLOYEE PORTAL GRID --- */
+        /* --- PORTAL GRID --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px 40px; }
         .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
         .field label { font-size: 12px; font-weight: 600; color: var(--text-light); }
@@ -221,7 +221,7 @@
     let SECTIONS = [];
     let CURRENT_USER_PMIS = "";
     let isLocked = false;
-    let currentAdminPass = "";
+    let currentAdminPass = ""; // Stores the password used for login
 
     // --- INITIAL SYSTEM LOAD ---
     window.onload = async () => {
@@ -233,7 +233,6 @@
         if(response.fields && response.fields.length > 0) {
             SCHEMA = response.fields;
             SECTIONS = [...new Set(SCHEMA.map(f => f.Section))].filter(Boolean);
-            console.log("Schema Refresh:", SCHEMA.length, "fields.");
             if(document.getElementById('adminView').style.display === 'block') {
                 renderAdminDashboard();
             }
@@ -289,7 +288,6 @@
             view.appendChild(card);
         });
 
-        // Toggle UI
         document.getElementById('pmis-box').style.display = 'none';
         document.getElementById('dob-box').style.display = 'none';
         document.getElementById('loadBtn').style.display = 'none';
@@ -430,17 +428,17 @@
         const newSchemaFields = [];
         
         for(let row of rows) {
-            const fieldName = row.cells[0].querySelector('input').value.trim();
+            const fieldInput = row.cells[0].querySelector('input');
+            const fieldName = (fieldInput.name === "fieldName") ? fieldInput.value.trim() : fieldInput.value.trim();
             const label = row.querySelector('[name="label"]').value.trim();
             const section = row.querySelector('[name="section"]').value;
             const type = row.querySelector('[name="type"]').value;
             const maxChars = row.querySelector('[name="maxChars"]').value;
             const order = row.querySelector('[name="order"]').value;
             const options = row.querySelector('[name="options"]').value;
-            const required = "NO"; // Default
+            const required = "NO"; 
 
             if(!fieldName) { notify("Field Name cannot be empty."); return; }
-            
             newSchemaFields.push({ fieldName, label, section, type, maxChars, required, order, options });
         }
 
@@ -449,14 +447,16 @@
         setLockedState(true);
         notify("Syncing System Configuration...");
         
+        // Match the v7.3 signature: configData, authPassword, newPassword
         const res = await apiRequest({
             action: "updateConfig",
             configData: { fields: newSchemaFields },
-            password: newPass
+            authPassword: currentAdminPass, 
+            newPassword: newPass
         });
 
         if(res.status === "success") {
-            currentAdminPass = newPass;
+            currentAdminPass = newPass; // Update local storage of current pass
             notify("Configuration Published Successfully!");
             await refreshSchema();
         } else {
@@ -535,7 +535,7 @@
         const res = await apiRequest({ action: "adminAuth", password: pass });
         setLockedState(false);
         if(res.authorized) {
-            currentAdminPass = pass;
+            currentAdminPass = pass; // Store the login password for later config updates
             toggleAdminModal(false);
             showAdminDashboard();
         } else {
@@ -549,7 +549,6 @@
         document.getElementById('dynamicNav').style.display = 'none';
         document.getElementById('adminPanelBtn').style.display = 'none';
         document.getElementById('exitAdminBtn').style.display = 'block';
-        // Hide auth row in admin mode for cleaner space
         document.getElementById('pmis-box').style.display = 'none';
         document.getElementById('dob-box').style.display = 'none';
         document.getElementById('loadBtn').style.display = 'none';
