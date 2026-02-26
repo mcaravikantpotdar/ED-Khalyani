@@ -65,12 +65,12 @@
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .card h2 { margin: 0 0 20px 0; color: var(--primary); font-size: 18px; border-bottom: 1px solid #f1f3f4; padding-bottom: 12px; }
 
-        /* --- PORTAL GRID (Responsive & Desktop Optimized) --- */
+        /* --- PORTAL GRID --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px 40px; }
         .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .field label { font-size: 12px; font-weight: 600; color: var(--text-light); display: flex; align-items: center; justify-content: space-between; }
+        .field label { font-size: 12px; font-weight: 600; color: var(--text-light); }
         
-        .input-wrap { display: flex; align-items: center; gap: 8px; }
+        .input-wrap { display: flex; align-items: center; gap: 8px; position: relative; }
         input, select, textarea { 
             flex: 1; padding: 12px; font-size: 15px; border: 1px solid var(--border); 
             border-radius: 4px; background: #fff; width: 100%; outline: none;
@@ -83,10 +83,26 @@
             background: var(--success); color: white; border: none; padding: 10px 14px; 
             border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
             display: none; animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
         }
         @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .pct-badge { background: #e8f0fe; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        /* --- FLOATING TAG DESIGN --- */
+        .pct-badge { 
+            position: absolute;
+            right: 40px; /* Positioned inside the input area */
+            background: var(--primary);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            pointer-events: none; /* Allows clicking through to input */
+            z-index: 5;
+            display: none;
+        }
+
         .sync-badge { min-width: 24px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
 
         /* --- GLOBAL LOADING OVERLAY --- */
@@ -108,7 +124,6 @@
         td { padding: 8px; border-bottom: 1px solid var(--border); }
         .admin-input { padding: 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; text-transform: none; }
 
-        /* --- MODALS --- */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal { background: #fff; border-radius: 8px; width: 100%; max-width: 450px; padding: 30px; box-shadow: var(--shadow); position: relative; }
         
@@ -118,6 +133,7 @@
             nav { top: 145px; }
             .grid { grid-template-columns: 1fr; }
             .card { padding: 16px; }
+            .pct-badge { right: 40px; } /* Ensure spacing on mobile */
         }
 
         #toast { 
@@ -126,8 +142,8 @@
             font-size: 14px; display: none; z-index: 3000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .spin { animation: rotate 1s linear infinite; display: inline-block; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
+        .spin { animation: rotate 1s linear infinite; display: inline-block; }
     </style>
 </head>
 <body>
@@ -160,7 +176,6 @@
 
 <nav id="dynamicNav"></nav>
 
-<!-- User View -->
 <div class="container" id="mainView">
     <div style="text-align:center; padding-top: 100px; color: var(--text-light);">
         <h3>PMIS Dynamic Management Portal</h3>
@@ -168,7 +183,6 @@
     </div>
 </div>
 
-<!-- Admin Dashboard View -->
 <div class="container" id="adminView">
     <div class="card">
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -213,7 +227,6 @@
     </div>
 </div>
 
-<!-- Admin Access Modal -->
 <div class="overlay" id="adminOverlay">
     <div class="modal">
         <h3>Admin Access</h3>
@@ -229,7 +242,6 @@
 <div id="toast"></div>
 
 <script>
-    // --- INTEGRATED WEB APP URL ---
     const API_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
     
     let SCHEMA = [];
@@ -238,7 +250,6 @@
     let isLocked = false;
     let currentAdminPass = ""; 
 
-    // --- INITIAL SYSTEM LOAD ---
     window.onload = async () => {
         await refreshSchema();
     };
@@ -270,7 +281,6 @@
         }
     }
 
-    // --- LOADER CONTROLS ---
     function showLoader(msg) {
         document.getElementById('loaderMsg').innerText = msg;
         document.getElementById('globalLoader').style.display = 'flex';
@@ -286,7 +296,6 @@
         setTimeout(() => toast.style.display='none', 3500);
     }
 
-    // --- USER DASHBOARD ---
     function buildDashboard(userData = {}) {
         const view = document.getElementById('mainView');
         const nav = document.getElementById('dynamicNav');
@@ -314,14 +323,12 @@
             view.appendChild(card);
         });
 
-        // Hide login, show logout
         document.getElementById('pmis-box').style.display = 'none';
         document.getElementById('dob-box').style.display = 'none';
         document.getElementById('loadBtn').style.display = 'none';
         document.getElementById('regBtn').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'block';
 
-        // Run initial scans for badges and state
         runInitialScans(userData);
         initScrollSpy();
     }
@@ -330,7 +337,7 @@
         const fieldDiv = document.createElement('div');
         fieldDiv.className = "field";
         const labelText = f.Label || f["Field Name"];
-        fieldDiv.innerHTML = `<label><span>${labelText}</span>${f.Type === 'Marks' ? '<span class="pct-badge" id="pct-'+f["Field Name"]+'"></span>' : ''}</label>`;
+        fieldDiv.innerHTML = `<label>${labelText}</label>`;
         
         const inputWrap = document.createElement('div');
         inputWrap.className = "input-wrap";
@@ -353,11 +360,19 @@
         if(f.MaxChars) inputElement.maxLength = f.MaxChars;
         if(f.Type === 'Email') inputElement.style.textTransform = "lowercase";
 
+        // Floating Badge for Marks
+        let badge;
+        if (f.Type === 'Marks') {
+            badge = document.createElement('span');
+            badge.className = "pct-badge";
+            badge.id = 'pct-' + f["Field Name"];
+            inputWrap.appendChild(badge);
+        }
+
         inputElement.oninput = () => {
             const saveBtn = inputWrap.querySelector('.save-btn');
             let isFieldValid = true;
 
-            // Flexible Date Pattern
             if (f.Type === 'Date') {
                 const val = inputElement.value;
                 const pattern = /^(\d{4}|\d{2}-\d{4}|\d{2}-\d{2}-\d{4})$/;
@@ -366,12 +381,10 @@
 
             saveBtn.style.display = isFieldValid ? "block" : "none";
 
-            // Standard Masks
             if(f.Type === 'Mobile') maskMobile(inputElement);
             if(f.Type === 'Aadhaar') maskAadhaar(inputElement);
             if(f.Type === 'Marks') calcPct(inputElement.value, f["Field Name"]);
             
-            // Interaction logic
             if(f.Type === 'Yes/No' && inputElement.value === 'NO') processDependencies(f, true);
             else if(f.Type === 'Yes/No' && inputElement.value === 'YES') processDependencies(f, false);
         };
@@ -392,25 +405,21 @@
         return fieldDiv;
     }
 
-    // --- "ALWAYS ON" INITIAL SCANS ---
     function runInitialScans(userData) {
         SCHEMA.forEach(f => {
             const val = userData[f["Field Name"]];
             if (!val) return;
 
-            // Trigger Percentages
             if (f.Type === 'Marks') {
                 calcPct(val, f["Field Name"]);
             }
             
-            // Trigger initial visibility/dependency states
             if (f.Type === 'Yes/No' && val === 'NO') {
                 processDependencies(f, true);
             }
         });
     }
 
-    // --- ADMIN DASHBOARD ---
     function renderAdminDashboard() {
         const body = document.getElementById('schemaBody');
         body.innerHTML = "";
@@ -467,20 +476,19 @@
         const newSchemaFields = [];
         for(let row of rows) {
             const fieldInput = row.cells[0].querySelector('input');
-            const fieldName = (fieldInput.name === "fieldName") ? fieldInput.value.trim() : fieldInput.value.trim();
+            const fieldName = fieldInput.value.trim();
             const label = row.querySelector('[name="label"]').value.trim();
             const section = row.querySelector('[name="section"]').value.trim();
             const type = row.querySelector('[name="type"]').value;
             const maxChars = row.querySelector('[name="maxChars"]').value;
             const order = row.querySelector('[name="order"]').value;
             const options = row.querySelector('[name="options"]').value;
-            const required = "NO"; 
             if(!fieldName) { notify("Field Name cannot be empty."); return; }
-            newSchemaFields.push({ fieldName, label, section, type, maxChars, required, order, options });
+            newSchemaFields.push({ fieldName, label, section, type, maxChars, required: "NO", order, options });
         }
         const newPass = document.getElementById('newAdminPass').value || currentAdminPass;
         setLockedState(true);
-        showLoader("Publishing Configuration & Passwords...");
+        showLoader("Publishing Configuration...");
         const res = await apiRequest({
             action: "updateConfig",
             configData: { fields: newSchemaFields },
@@ -490,34 +498,30 @@
         hideLoader();
         if(res.status === "success") {
             currentAdminPass = newPass;
-            notify("Configuration Published Successfully!");
+            notify("Configuration Published!");
             await refreshSchema();
         } else {
-            notify(res.message || "Failed to publish configuration.");
+            notify(res.message);
         }
         setLockedState(false);
     }
 
-    // --- SYSTEM ACTIONS ---
     async function appAction(type) {
         const pmis = document.getElementById('auth_pmis').value;
         const dob = document.getElementById('auth_dob').value;
         if(pmis.length < 5 || dob.length < 10) return notify("Enter 5-digit PMIS and D.O.B.");
-
         setLockedState(true);
-        showLoader(type === 'register' ? "Creating New Record..." : "Fetching Employee History...");
-        
+        showLoader(type === 'register' ? "Registering..." : "Loading Data...");
         const res = await apiRequest({ action: type, pmisCode: pmis, dob: dob });
         hideLoader();
-        
         if(res.status === "found") {
             CURRENT_USER_PMIS = pmis;
             buildDashboard(res);
             notify("Data Sync Complete.");
         } else if(res.status === "success") {
-            notify(res.message || "Success! Click LOAD to view.");
+            notify(res.message);
         } else {
-            notify(res.message || "Operation failed.");
+            notify(res.message);
         }
         setLockedState(false);
     }
@@ -529,14 +533,12 @@
         setLockedState(true);
         btn.style.display = "none";
         badge.innerHTML = '<span class="spin">⏳</span>';
-
         const res = await apiRequest({
             action: "atomicUpdate",
             pmisCode: CURRENT_USER_PMIS,
             fieldName: el.id,
             value: el.value
         });
-
         if(res.status === "success") {
             badge.innerText = "✅";
             setTimeout(() => badge.innerText = "", 2500);
@@ -549,7 +551,6 @@
     }
 
     function logout() { location.reload(); }
-
     function exitAdmin() {
         document.getElementById('adminView').style.display = 'none';
         document.getElementById('mainView').style.display = 'block';
@@ -561,12 +562,11 @@
         document.getElementById('loadBtn').style.display = 'block';
         document.getElementById('regBtn').style.display = 'block';
     }
-
     function toggleAdminModal(show) { document.getElementById('adminOverlay').style.display = show ? 'flex' : 'none'; }
     async function authAdmin() {
         const pass = document.getElementById('adminPass').value;
         setLockedState(true);
-        showLoader("Verifying Admin Access...");
+        showLoader("Verifying...");
         const res = await apiRequest({ action: "adminAuth", password: pass });
         hideLoader();
         setLockedState(false);
@@ -575,10 +575,9 @@
             toggleAdminModal(false);
             showAdminDashboard();
         } else {
-            notify("Unauthorized Access.");
+            notify("Denied.");
         }
     }
-
     function showAdminDashboard() {
         document.getElementById('mainView').style.display = 'none';
         document.getElementById('adminView').style.display = 'block';
@@ -590,10 +589,7 @@
         document.getElementById('loadBtn').style.display = 'none';
         document.getElementById('regBtn').style.display = 'none';
         renderAdminDashboard();
-        notify("Administrator Dashboard Active.");
     }
-
-    // --- UTILS ---
     function setLockedState(locked) {
         isLocked = locked;
         document.querySelectorAll('.btn, .save-btn').forEach(b => b.disabled = locked);
@@ -615,10 +611,16 @@
     }
     function calcPct(val, fieldId) {
         const badge = document.getElementById('pct-'+fieldId);
-        if(!badge || !val.includes('/')) { if(badge) badge.innerText=""; return; }
+        if(!badge) return;
+        if(!val.includes('/')) { badge.style.display = "none"; return; }
         const p = val.split('/');
         const obs = parseFloat(p[0]); const tot = parseFloat(p[1]);
-        if(!isNaN(obs) && !isNaN(tot) && tot > 0) badge.innerText = ((obs/tot)*100).toFixed(2) + "%";
+        if(!isNaN(obs) && !isNaN(tot) && tot > 0) {
+            badge.innerText = ((obs/tot)*100).toFixed(2) + "%";
+            badge.style.display = "block";
+        } else {
+            badge.style.display = "none";
+        }
     }
     function processDependencies(f, disable) {
         const myIndex = SCHEMA.indexOf(f);
