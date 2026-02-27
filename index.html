@@ -1,467 +1,159 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PMIS Dynamic Professional Portal</title>
-    <style>
-        :root {
-            --primary: #1a73e8; --primary-hover: #174ea6;
-            --success: #1e8e3e; --error: #d93025;
-            --bg: #f8f9fa; --surface: #ffffff; --border: #dadce0;
-            --text: #202124; --text-light: #5f6368;
-            --shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-        }
+/**
+ * PMIS DYNAMIC ENGINE v8.1 - WONDERFUL EDITION
+ * Architecture: Fixed-Grid Layout + Multi-Size Field Support
+ * Protocol: Atomic Sync + Header Auto-Sync + WYSIWYG Persistence
+ */
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+const DATA_SHEET = "Sheet1";
+const CONFIG_SHEET = "App_Config";
+const AUTH_SHEET = "App_Password";
 
-        /* --- STICKY HEADER --- */
-        header { 
-            position: sticky; top: 0; z-index: 1000; background: var(--surface); 
-            padding: 12px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 15px;
-        }
-        .auth-controls { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
-        .input-group { display: flex; flex-direction: column; gap: 4px; }
-        .input-group label { font-size: 11px; font-weight: bold; color: var(--text-light); text-transform: uppercase; }
-        
-        .std-input { 
-            padding: 10px; border: 1px solid var(--border); border-radius: 4px; 
-            font-size: 14px; outline: none; background: #f1f3f4; transition: 0.2s;
-        }
-        .std-input:focus { border-color: var(--primary); background: #fff; }
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); 
+    const request = JSON.parse(e.postData.contents);
+    const action = request.action;
 
-        .btn { 
-            padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer;
-            font-weight: 600; font-size: 13px; transition: 0.2s;
-        }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--primary); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--error); color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* --- NAVIGATION --- */
-        nav { 
-            position: sticky; top: 75px; z-index: 999; background: var(--surface);
-            display: flex; overflow-x: auto; border-bottom: 1px solid var(--border);
-            scrollbar-width: none;
-        }
-        nav::-webkit-scrollbar { display: none; }
-        .nav-item { 
-            padding: 15px 20px; text-decoration: none; color: var(--text-light);
-            font-size: 13px; font-weight: 500; white-space: nowrap; border-bottom: 3px solid transparent;
-        }
-        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-        /* --- CONTAINERS --- */
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px 100px; }
-        #adminView { display: none; }
-
-        /* --- CARDS --- */
-        .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .card h2 { margin: 0 0 20px 0; color: var(--primary); font-size: 18px; border-bottom: 1px solid #f1f3f4; padding-bottom: 12px; }
-
-        /* --- PORTAL GRID --- */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px 40px; }
-        .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .field label { font-size: 12px; font-weight: 600; color: var(--text-light); }
-        .field-full { grid-column: 1 / -1; }
-
-        .input-wrap { display: flex; align-items: center; gap: 8px; position: relative; }
-        input, select, textarea { 
-            flex: 1; padding: 12px; font-size: 15px; border: 1px solid var(--border); 
-            border-radius: 4px; background: #fff; width: 100%; outline: none;
-            text-transform: uppercase; transition: border 0.2s;
-        }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-        input[disabled], select[disabled] { background: #f8f9fa; cursor: not-allowed; color: #9aa0a6; }
-
-        /* FLOATING PCT BADGE */
-        .pct-badge { 
-            position: absolute; right: 40px; background: var(--primary); color: white; 
-            padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; z-index: 5; display: none;
-        }
-
-        .save-btn { 
-            background: var(--success); color: white; border: none; padding: 10px 14px; 
-            border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
-            display: none; animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            white-space: nowrap;
-        }
-        @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .sync-badge { min-width: 24px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-
-        /* --- GLOBAL LOADING OVERLAY --- */
-        #globalLoader {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(2px); z-index: 9999; 
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .loader-spin {
-            width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary);
-            border-radius: 50%; animation: rotate 1s linear infinite; margin-bottom: 15px;
-        }
-        .loader-text { color: var(--primary); font-weight: 600; font-size: 15px; letter-spacing: 0.5px; }
-
-        /* --- ADMIN DASHBOARD TABLE --- */
-        .admin-table-wrap { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1050px; }
-        th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 12px; color: var(--text-light); border-bottom: 2px solid var(--border); }
-        td { padding: 8px; border-bottom: 1px solid var(--border); background: var(--surface); }
-        .admin-input { padding: 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; text-transform: none; width: 100%; }
-
-        /* DRAG AND DROP STYLING */
-        .drag-handle { 
-            cursor: grab; color: #dadce0; font-size: 18px; padding: 0 10px; 
-            user-select: none; display: flex; align-items: center; justify-content: center;
-        }
-        .drag-handle:active { cursor: grabbing; }
-        tr.dragging { opacity: 0.5; background: #e8f0fe !important; outline: 2px dashed var(--primary); }
-        tr.drag-over { border-top: 3px solid var(--primary); }
-
-        .move-btn { background: #f1f3f4; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 2px; }
-        .move-btn:hover { background: #e8eaed; }
-
-        /* --- MODALS --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .modal { background: #fff; border-radius: 8px; width: 100%; max-width: 450px; padding: 30px; box-shadow: var(--shadow); position: relative; }
-        
-        @media (max-width: 700px) {
-            header { flex-direction: column; align-items: flex-start; }
-            .auth-controls { width: 100%; }
-            nav { top: 145px; }
-            .grid { grid-template-columns: 1fr; }
-            .card { padding: 16px; }
-        }
-
-        #toast { 
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
-            background: #323232; color: #fff; padding: 12px 24px; border-radius: 4px; 
-            font-size: 14px; display: none; z-index: 3000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .spin { animation: rotate 1s linear infinite; display: inline-block; }
-        @keyframes rotate { 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-<div id="globalLoader"><div class="loader-spin"></div><div class="loader-text" id="loaderMsg">Fetching Data...</div></div>
-
-<header>
-    <div class="auth-controls">
-        <div class="input-group" id="pmis-box"><label>PMIS CODE</label><input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-        <div class="input-group" id="dob-box"><label>D.O.B.</label><input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)"></div>
-        <button class="btn btn-blue" id="loadBtn" onclick="appAction('fetchRecord')">LOAD DATA</button>
-        <button class="btn btn-outline" id="regBtn" onclick="appAction('register')">REGISTER</button>
-        <button class="btn btn-outline" id="logoutBtn" style="display:none" onclick="logout()">LOGOUT</button>
-    </div>
-    <div id="admin-toggle-box">
-        <button class="btn btn-outline" id="adminPanelBtn" onclick="toggleAdminModal(true)">ADMIN PANEL</button>
-        <button class="btn btn-outline" id="exitAdminBtn" style="display:none" onclick="exitAdmin()">EXIT ADMIN</button>
-    </div>
-</header>
-
-<nav id="dynamicNav"></nav>
-
-<div class="container" id="mainView">
-    <div style="text-align:center; padding-top: 100px; color: var(--text-light);">
-        <h3>PMIS Dynamic Management Portal</h3>
-        <p>Authenticate with your PMIS Code and D.O.B to access your employee records.</p>
-    </div>
-</div>
-
-<!-- Admin View -->
-<div class="container" id="adminView">
-    <div class="card">
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="border:none; margin:0">System Design (WYSIWYG)</h2>
-            <button class="btn btn-success" onclick="saveAdminChanges()">PUBLISH SYSTEM</button>
-        </div>
-
-        <div style="display:flex; gap:20px; flex-wrap: wrap; margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
-            <div class="input-group" style="flex:1"><label>Admin Password</label><input type="password" id="newAdminPass" class="std-input" placeholder="Update Password" style="background:#fff"></div>
-            <p style="font-size:12px; color:var(--text-light); max-width:400px; margin:0">Drag the <b>⠿</b> handle or use arrows to reorder fields. The layout here mirrors the employee portal exactly.</p>
-        </div>
-
-        <div class="admin-table-wrap">
-            <table id="schemaTable">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th style="width:180px">Field Name (ID)</th>
-                        <th>Label</th>
-                        <th>Section</th>
-                        <th>Type</th>
-                        <th style="width:70px">Chars</th>
-                        <th style="width:80px">New Line</th>
-                        <th>Options (if Select)</th>
-                        <th style="width:140px">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="schemaBody"></tbody>
-            </table>
-        </div>
-        <button class="btn btn-outline" style="margin-top:20px" onclick="addNewFieldRow()">+ ADD NEW COLUMN</button>
-    </div>
-</div>
-
-<!-- Admin Access Modal -->
-<div class="overlay" id="adminOverlay"><div class="modal">
-    <h3>Admin Access</h3>
-    <p style="font-size:13px; color:var(--text-light)">Enter master password to manage system configuration.</p>
-    <input type="password" id="adminPass" class="std-input" style="width:100%; margin: 15px 0;" placeholder="Master Password">
-    <div style="display:flex; gap:10px; justify-content: flex-end;"><button class="btn btn-outline" onclick="toggleAdminModal(false)">CANCEL</button><button class="btn btn-blue" onclick="authAdmin()">LOGIN</button></div>
-</div></div>
-
-<div id="toast"></div>
-
-<script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
-    let SCHEMA = [], SECTIONS = [], CURRENT_USER_PMIS = "", isLocked = false, currentAdminPass = ""; 
-
-    window.onload = async () => { await refreshSchema(); };
-
-    async function refreshSchema() {
-        showLoader("Syncing Architecture...");
-        const response = await apiRequest({ action: "getSchema" });
-        hideLoader();
-        if(response.fields && response.fields.length > 0) {
-            SCHEMA = response.fields;
-            SECTIONS = [...new Set(SCHEMA.map(f => f.Section))].filter(Boolean);
-            if(document.getElementById('adminView').style.display === 'block') renderAdminDashboard();
-        }
+    switch (action) {
+      case "getSchema": return createResponse(getSchema());
+      case "fetchRecord": return createResponse(fetchRecord(request.pmisCode, request.dob));
+      case "atomicUpdate": return createResponse(atomicUpdate(request.pmisCode, request.fieldName, request.value));
+      case "register": return createResponse(registerRecord(request.pmisCode, request.dob));
+      case "adminAuth": return createResponse(adminAuth(request.password));
+      case "updateConfig": return createResponse(updateConfig(request.configData, request.authPassword, request.newPassword));
+      default: return createResponse({ status: "error", message: "Invalid action." });
     }
+  } catch (err) {
+    return createResponse({ status: "error", message: err.toString() });
+  } finally {
+    lock.releaseLock();
+  }
+}
 
-    async function apiRequest(body) {
-        try {
-            const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' } });
-            return await response.json();
-        } catch(e) { notify("Connection Error."); return {status: "error"}; }
+function createResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getSchema() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const configSheet = ss.getSheetByName(CONFIG_SHEET);
+  if (!configSheet) return { fields: [], status: "error", message: "Config sheet missing." };
+  
+  const data = configSheet.getDataRange().getDisplayValues();
+  if (data.length < 2) return { fields: [], status: "success" };
+
+  const headers = data[0].map(h => h.trim());
+  const fields = [];
+  for (let i = 1; i < data.length; i++) {
+    let fieldObj = {};
+    headers.forEach((header, index) => { fieldObj[header] = data[i][index]; });
+    if (fieldObj["Field Name"]) fields.push(fieldObj);
+  }
+  return { fields: fields, status: "success" };
+}
+
+function updateConfig(configData, authPassword, newPassword) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!adminAuth(authPassword).authorized) return { status: "error", message: "Unauthorized." };
+  
+  const configSheet = ss.getSheetByName(CONFIG_SHEET);
+  const authSheet = ss.getSheetByName(AUTH_SHEET);
+  const dataSheet = ss.getSheetByName(DATA_SHEET);
+
+  // Update Security
+  authSheet.clear();
+  authSheet.getRange(1, 1).setValue("ADMIN_PASSWORD");
+  authSheet.getRange(1, 2).setValue(String(newPassword).trim());
+
+  // Update Config Schema - Removed "New Line", added "Size"
+  configSheet.clear();
+  const headers = ["Field Name", "Label", "Section", "Type", "Max Chars", "Required", "Size", "Options"];
+  configSheet.appendRow(headers);
+  
+  if (configData.fields) {
+    configData.fields.forEach(f => {
+      configSheet.appendRow([
+        f.fieldName || "", f.label || "", f.section || "", f.type || "Short Text", 
+        f.maxChars || "", f.required || "NO", f.size || "Standard", f.options || ""
+      ]);
+    });
+  }
+
+  // Header Auto-Sync (Lossless)
+  const currentHeaders = dataSheet.getRange(1, 1, 1, Math.max(1, dataSheet.getLastColumn())).getDisplayValues()[0].map(h => h.trim());
+  configData.fields.forEach(f => {
+    if (f.fieldName && currentHeaders.indexOf(f.fieldName) === -1) {
+      dataSheet.getRange(1, dataSheet.getLastColumn() + 1).setValue(f.fieldName);
     }
+  });
 
-    function showLoader(msg) { document.getElementById('loaderMsg').innerText = msg; document.getElementById('globalLoader').style.display = 'flex'; }
-    function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
-    function notify(message) { const toast = document.getElementById('toast'); toast.innerText = message; toast.style.display = 'block'; setTimeout(() => toast.style.display='none', 3000); }
+  return { status: "success" };
+}
 
-    function buildDashboard(userData = {}) {
-        const view = document.getElementById('mainView');
-        const nav = document.getElementById('dynamicNav');
-        view.innerHTML = ""; nav.innerHTML = ""; nav.style.display = 'flex';
+function fetchRecord(pmisCode, dob) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  const data = sheet.getDataRange().getDisplayValues();
+  const headers = data[0].map(h => h.trim());
+  const pmisIdx = headers.indexOf("PMIS Code");
+  const dobIdx = headers.indexOf("D.O.B.");
 
-        SECTIONS.forEach((secName, idx) => {
-            const link = document.createElement('a');
-            link.href = `#sec-${idx}`; link.className = `nav-item ${idx === 0 ? 'active' : ''}`; link.innerText = secName;
-            nav.appendChild(link);
-
-            const card = document.createElement('section');
-            card.id = `sec-${idx}`; card.className = "card"; card.innerHTML = `<h2>${secName}</h2>`;
-            const grid = document.createElement('div'); grid.className = "grid";
-
-            SCHEMA.filter(f => f.Section === secName).forEach(f => {
-                grid.appendChild(createField(f, userData[f["Field Name"]] || ""));
-            });
-
-            card.appendChild(grid); view.appendChild(card);
-        });
-
-        document.getElementById('pmis-box').style.display = 'none';
-        document.getElementById('dob-box').style.display = 'none';
-        document.getElementById('loadBtn').style.display = 'none';
-        document.getElementById('regBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'block';
-
-        runInitialScans(userData);
-        initScrollSpy();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][pmisIdx] === String(pmisCode).trim()) {
+      if (data[i][dobIdx] === String(dob).trim()) {
+        let record = { status: "found" };
+        headers.forEach((h, idx) => { record[h] = data[i][idx]; });
+        return record;
+      }
+      return { status: "error", message: "Incorrect D.O.B." };
     }
+  }
+  return { status: "error", message: "PMIS Code not found." };
+}
 
-    function createField(f, currentVal) {
-        const div = document.createElement('div');
-        div.className = "field" + (f["New Line"] === 'YES' ? " field-full" : "");
-        div.innerHTML = `<label>${f.Label || f["Field Name"]}</label>`;
-        
-        const wrap = document.createElement('div'); wrap.className = "input-wrap";
-        let input;
-        if(f.Type === 'Yes/No' || f.Type === 'Select') {
-            input = document.createElement('select');
-            const opts = (f.Options && f.Options.trim() !== "") ? f.Options.split(',') : (f.Type === 'Yes/No' ? ["YES", "NO"] : []);
-            input.innerHTML = `<option value="">SELECT</option>` + opts.map(o => `<option value="${o.trim()}">${o.trim()}</option>`).join('');
-        } else if(f.Type === 'Paragraph') {
-            input = document.createElement('textarea'); input.rows = 1;
-        } else {
-            input = document.createElement('input'); input.type = "text";
-        }
+function atomicUpdate(pmisCode, fieldName, value) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  const data = sheet.getDataRange().getDisplayValues();
+  const headers = data[0].map(h => h.trim());
+  const pmisIdx = headers.indexOf("PMIS Code");
+  const fieldIdx = headers.indexOf(fieldName);
 
-        input.id = f["Field Name"]; input.value = currentVal;
-        if(f.MaxChars) input.maxLength = f.MaxChars;
+  if (fieldIdx === -1) return { status: "error", message: "Header mismatch." };
 
-        if (f.Type === 'Marks') {
-            const b = document.createElement('span'); b.className = "pct-badge"; b.id = 'pct-'+f["Field Name"];
-            wrap.appendChild(b);
-        }
+  let processedValue = (fieldName.toLowerCase().includes("email")) ? String(value).toLowerCase().trim() : String(value).toUpperCase().trim();
 
-        input.oninput = () => {
-            const saveBtn = wrap.querySelector('.save-btn');
-            let isFieldValid = true;
-            if(f.Type === 'Date') isFieldValid = /^(\d{4}|\d{2}-\d{4}|\d{2}-\d{2}-\d{4})$/.test(input.value);
-            saveBtn.style.display = isFieldValid ? "block" : "none";
-            if(f.Type === 'Mobile') maskMobile(input);
-            if(f.Type === 'Aadhaar') maskAadhaar(input);
-            if(f.Type === 'Marks') calcPct(input.value, f["Field Name"]);
-            if(f.Type === 'Yes/No') processDependencies(f, input.value === 'NO');
-        };
-
-        const sb = document.createElement('button'); sb.className = "save-btn"; sb.innerText = "SAVE";
-        sb.onclick = () => saveField(input);
-
-        const sy = document.createElement('div'); sy.className = "sync-badge";
-        wrap.appendChild(input); wrap.appendChild(sb); wrap.appendChild(sy);
-        div.appendChild(wrap); return div;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][pmisIdx] === String(pmisCode).trim()) {
+      const cell = sheet.getRange(i + 1, fieldIdx + 1);
+      cell.setNumberFormat('@').setValue(processedValue);
+      return { status: "success" };
     }
+  }
+  return { status: "error", message: "Record not found." };
+}
 
-    function moveRow(btn, dir) {
-        const row = btn.closest('tr');
-        if(dir === 'up') { if(row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling); }
-        else { if(row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row); }
-    }
+function registerRecord(pmisCode, dob) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  const data = sheet.getDataRange().getDisplayValues();
+  const headers = data[0].map(h => h.trim());
+  const pmisIdx = headers.indexOf("PMIS Code");
+  const dobIdx = headers.indexOf("D.O.B.");
 
-    function renderAdminDashboard() {
-        const body = document.getElementById('schemaBody'); body.innerHTML = "";
-        SCHEMA.forEach(f => {
-            const tr = createAdminRow(f); body.appendChild(tr);
-        });
-        document.getElementById('newAdminPass').value = currentAdminPass;
-    }
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][pmisIdx] === String(pmisCode).trim()) return { status: "error", message: "PMIS already exists." };
+  }
 
-    function createAdminRow(f) {
-        const tr = document.createElement('tr');
-        tr.draggable = true;
-        tr.innerHTML = `
-            <td class="drag-handle">⠿</td>
-            <td><input type="text" class="admin-input" value="${f["Field Name"]}" readonly style="background:#eee"></td>
-            <td><input type="text" class="admin-input" name="label" value="${f.Label || ''}"></td>
-            <td><input type="text" class="admin-input" name="section" value="${f.Section || ''}"></td>
-            <td><select class="admin-input" name="type">${["Short Text", "Paragraph", "Date", "Yes/No", "Marks", "Mobile", "Aadhaar", "PAN", "Email", "IFSC", "Select"].map(t => `<option value="${t}" ${t===f.Type?'selected':''}>${t}</option>`).join('')}</select></td>
-            <td><input type="number" class="admin-input" name="maxChars" value="${f.MaxChars || ''}"></td>
-            <td style="text-align:center"><input type="checkbox" name="newLine" ${f["New Line"] === 'YES' ? 'checked' : ''}></td>
-            <td><input type="text" class="admin-input" name="options" value="${f.Options || ''}"></td>
-            <td>
-                <button class="move-btn" onclick="moveRow(this, 'up')">↑</button>
-                <button class="move-btn" onclick="moveRow(this, 'down')">↓</button>
-                <button class="btn btn-danger" style="padding:4px 8px; font-size:11px" onclick="if(confirm('Delete field?')) this.closest('tr').remove()">DEL</button>
-            </td>
-        `;
-        setupDragEvents(tr);
-        return tr;
-    }
+  let newRow = new Array(headers.length).fill("");
+  newRow[pmisIdx] = String(pmisCode).trim();
+  newRow[dobIdx] = String(dob).trim();
+  sheet.appendRow(newRow);
+  sheet.getRange(sheet.getLastRow(), 1, 1, headers.length).setNumberFormat('@');
+  return { status: "success", message: "Registration successful." };
+}
 
-    function setupDragEvents(row) {
-        row.addEventListener('dragstart', (e) => { e.target.classList.add('dragging'); });
-        row.addEventListener('dragend', (e) => { e.target.classList.remove('dragging'); document.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over')); });
-        row.addEventListener('dragover', (e) => { e.preventDefault(); const tr = e.target.closest('tr'); if(tr) tr.classList.add('drag-over'); });
-        row.addEventListener('dragleave', (e) => { const tr = e.target.closest('tr'); if(tr) tr.classList.remove('drag-over'); });
-        row.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const draggingRow = document.querySelector('.dragging');
-            const targetRow = e.target.closest('tr');
-            if(draggingRow && targetRow && draggingRow !== targetRow) {
-                const parent = targetRow.parentNode;
-                const draggingIndex = Array.from(parent.children).indexOf(draggingRow);
-                const targetIndex = Array.from(parent.children).indexOf(targetRow);
-                if (draggingIndex < targetIndex) parent.insertBefore(draggingRow, targetRow.nextSibling);
-                else parent.insertBefore(draggingRow, targetRow);
-            }
-        });
-    }
-
-    function addNewFieldRow() {
-        const body = document.getElementById('schemaBody');
-        const tr = createAdminRow({ "Field Name": "", Label: "", Section: "", Type: "Short Text", MaxChars: "", "New Line": "NO", Options: "" });
-        const nameInput = tr.querySelector('input[readonly]');
-        nameInput.readOnly = false; nameInput.style.background = "#fff"; nameInput.name = "fieldName"; nameInput.placeholder = "ID";
-        body.appendChild(tr);
-    }
-
-    async function saveAdminChanges() {
-        if(isLocked) return;
-        const rows = document.querySelectorAll('#schemaBody tr');
-        const newFields = [];
-        rows.forEach(row => {
-            const fieldInput = row.querySelector('input[value], input[name="fieldName"]');
-            const fieldName = fieldInput.value.trim();
-            if(!fieldName) return;
-            newFields.push({
-                fieldName,
-                label: row.querySelector('[name="label"]').value.trim(),
-                section: row.querySelector('[name="section"]').value.trim(),
-                type: row.querySelector('[name="type"]').value,
-                maxChars: row.querySelector('[name="maxChars"]').value,
-                newLine: row.querySelector('[name="newLine"]').checked ? "YES" : "NO",
-                options: row.querySelector('[name="options"]').value
-            });
-        });
-        const np = document.getElementById('newAdminPass').value || currentAdminPass;
-        setLockedState(true); showLoader("Publishing Dynamic Layout...");
-        const res = await apiRequest({ action: "updateConfig", configData: { fields: newFields }, authPassword: currentAdminPass, newPassword: np });
-        hideLoader();
-        if(res.status === "success") { currentAdminPass = np; notify("Published!"); await refreshSchema(); }
-        else notify(res.message);
-        setLockedState(false);
-    }
-
-    async function appAction(type) {
-        const pmis = document.getElementById('auth_pmis').value;
-        const dob = document.getElementById('auth_dob').value;
-        if(pmis.length < 5 || dob.length < 10) return notify("Enter PMIS/DOB");
-        setLockedState(true); showLoader("Accessing Records...");
-        const res = await apiRequest({ action: type, pmisCode: pmis, dob: dob });
-        hideLoader();
-        if(res.status === "found") { CURRENT_USER_PMIS = pmis; buildDashboard(res); notify("Loaded."); }
-        else notify(res.message);
-        setLockedState(false);
-    }
-
-    async function saveField(el) {
-        if(isLocked) return;
-        const wrap = el.parentNode; const sb = wrap.querySelector('.save-btn'); const sy = wrap.querySelector('.sync-badge');
-        setLockedState(true); sb.style.display = "none"; sy.innerHTML = '<span class="spin">⏳</span>';
-        const res = await apiRequest({ action: "atomicUpdate", pmisCode: CURRENT_USER_PMIS, fieldName: el.id, value: el.value });
-        if(res.status === "success") { sy.innerText = "✅"; setTimeout(() => sy.innerText = "", 2500); }
-        else { sy.innerText = "❌"; sb.style.display = "block"; notify(res.message); }
-        setLockedState(false);
-    }
-
-    function runInitialScans(userData) { SCHEMA.forEach(f => { const v = userData[f["Field Name"]]; if(v) { if(f.Type==='Marks') calcPct(v, f["Field Name"]); if(f.Type==='Yes/No' && v==='NO') processDependencies(f, true); } }); }
-    function calcPct(v, id) { const b = document.getElementById('pct-'+id); if(!b) return; if(!v.includes('/')){ b.style.display="none"; return; } const p = v.split('/'); const obs = parseFloat(p[0]), tot = parseFloat(p[1]); if(!isNaN(obs) && !isNaN(tot) && tot>0){ b.innerText = ((obs/tot)*100).toFixed(2)+"%"; b.style.display="block"; } else b.style.display="none"; }
-    function logout() { location.reload(); }
-    function toggleAdminModal(s) { document.getElementById('adminOverlay').style.display = s ? 'flex' : 'none'; }
-    async function authAdmin() { 
-        const p = document.getElementById('adminPass').value; 
-        setLockedState(true); showLoader("Authenticating..."); 
-        const res = await apiRequest({ action: "adminAuth", password: p }); 
-        hideLoader(); setLockedState(false); 
-        if(res.authorized) { 
-            currentAdminPass = p; toggleAdminModal(false); 
-            document.getElementById('adminView').style.display = 'block'; 
-            document.getElementById('mainView').style.display = 'none'; 
-            document.getElementById('adminPanelBtn').style.display = 'none'; 
-            document.getElementById('exitAdminBtn').style.display = 'block'; 
-            document.getElementById('dynamicNav').style.display = 'none'; 
-            renderAdminDashboard(); 
-        } else notify("Denied."); 
-    }
-    function exitAdmin() { location.reload(); }
-    function setLockedState(l) { isLocked = l; document.querySelectorAll('.btn, .save-btn, .move-btn').forEach(b => b.disabled = l); }
-    function maskDate(e) { let v = e.value.replace(/\D/g,'').slice(0,8); if(v.length>=2) v = v.slice(0,2) + '-' + v.slice(2); if(v.length>=5) v = v.slice(0,5) + '-' + v.slice(5); e.value = v; }
-    function maskMobile(e) { let v = e.value.replace(/\D/g,'').slice(0,10); if(v.length>=5) v = v.slice(0,5) + '-' + v.slice(5); e.value = v; }
-    function maskAadhaar(e) { let v = e.value.replace(/\D/g,'').slice(0,12); let m = v.match(/.{1,4}/g); e.value = m ? m.join(' ') : v; }
-    function processDependencies(f, d) { const idx = SCHEMA.indexOf(f); for(let i=1; i<=2; i++){ const next = SCHEMA[idx+i]; if(next && next.Section===f.Section){ const t = document.getElementById(next["Field Name"]); if(t){ if(d) t.value = ""; t.disabled = d; } } } }
-    function initScrollSpy() { window.onscroll = () => { if(document.getElementById('mainView').style.display==='none') return; let active = ""; document.querySelectorAll('section.card').forEach(c => { if(window.pageYOffset >= (c.offsetTop - 180)) active = c.id; }); document.querySelectorAll('.nav-item').forEach(l => l.classList.toggle('active', l.href.includes(active))); }; }
-</script>
-</body>
-</html>
+function adminAuth(inputPassword) {
+  const authSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(AUTH_SHEET);
+  if (!authSheet) return { authorized: false };
+  const masterPassword = authSheet.getDataRange().getDisplayValues()[0][1]; 
+  return { authorized: String(inputPassword).trim() === String(masterPassword).trim() };
+}
