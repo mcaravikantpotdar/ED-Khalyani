@@ -49,7 +49,7 @@
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 30px; margin-bottom: 40px; box-shadow: var(--shadow); }
         .card h2 { margin: 0 0 25px 0; color: var(--primary); font-size: 20px; border-left: 4px solid var(--primary); padding-left: 15px; }
 
-        /* --- FIXED LOCKDOWN GRID (3-Column Professional) --- */
+        /* --- FIXED LOCKDOWN GRID (3-Column Architecture) --- */
         .grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
@@ -60,7 +60,7 @@
         .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
         .field label { font-size: 12px; font-weight: 600; color: var(--text-light); display: block; min-height: 18px; }
 
-        /* Size Spanning Logic */
+        /* Size Spanning Logic (Lossless UI Alignment) */
         .field-std { grid-column: span 1; }
         .field-med { grid-column: span 2; }
         .field-full { grid-column: span 3; }
@@ -135,10 +135,16 @@
 </div>
 
 <header>
-    <!-- AUTH CONTROLS: Hidden when in Designer mode -->
+    <!-- AUTH CONTROLS: Strictly hidden during Designer workflow to prevent state conflicts -->
     <div class="auth-controls" id="headerAuth">
-        <div class="input-group" id="pmis-box"><label>PMIS CODE</label><input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits"></div>
-        <div class="input-group" id="dob-box"><label>D.O.B.</label><input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)"></div>
+        <div class="input-group" id="pmis-box">
+            <label>PMIS CODE</label>
+            <input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits">
+        </div>
+        <div class="input-group" id="dob-box">
+            <label>D.O.B.</label>
+            <input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)">
+        </div>
         <button class="btn btn-blue" id="loadBtn" onclick="appAction('fetchRecord')">LOAD DATA</button>
         <button class="btn btn-outline" id="regBtn" onclick="appAction('register')">REGISTER</button>
         <button class="btn btn-outline" id="logoutBtn" style="display:none" onclick="logout()">LOGOUT</button>
@@ -156,7 +162,7 @@
     </div>
 </div>
 
-<!-- Admin Designer Area -->
+<!-- Admin View Area -->
 <div class="container" id="adminView">
     <div class="card">
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
@@ -167,9 +173,9 @@
         <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; display:flex; gap:30px; align-items: center; margin-bottom: 25px; border: 1px solid var(--border);">
             <div class="input-group" style="flex:1"><label>Admin Master Password</label><input type="password" id="newAdminPass" class="std-input" placeholder="Update System Password" style="background:#fff"></div>
             <div style="flex:2; font-size:13px; color:var(--text-light); line-height:1.6">
-                <b>Reordering:</b> Drag the ⠿ handle to rearrange fields.<br>
-                <b>Box Sizes:</b> Standard (1/3), Medium (2/3), or Full Row.<br>
-                <b>Clean State:</b> Auth controls are disabled while designing.
+                <b>Leading Zeros:</b> Registration now forces Plain Text to preserve IDs like 00001.<br>
+                <b>Box Sizes:</b> Standard (1/3), Medium (2/3), or Full Row (3/3).<br>
+                <b>Isolation:</b> Auth controls and Navigation are disabled while in Design Mode.
             </div>
         </div>
 
@@ -191,13 +197,13 @@
                 <tbody id="schemaBody"></tbody>
             </table>
         </div>
-        <button class="btn btn-outline" style="margin-top:25px" onclick="addNewFieldRow()">+ ADD NEW FIELD</button>
+        <button class="btn btn-outline" style="margin-top:25px" onclick="addNewFieldRow()">+ ADD NEW FIELD DEFINITION</button>
     </div>
 </div>
 
 <div class="overlay" id="adminOverlay"><div class="modal">
-    <h3 style="margin-top:0">Admin Authentication</h3>
-    <p style="font-size:13px; color:var(--text-light)">Enter master password to enter the Designer.</p>
+    <h3 style="margin-top:0">Administrator Authentication</h3>
+    <p style="font-size:13px; color:var(--text-light)">Validate credentials to enter the Designer workspace.</p>
     <input type="password" id="adminPass" class="std-input" style="width:100%; margin: 20px 0;" placeholder="Master Password">
     <div style="display:flex; gap:10px; justify-content: flex-end;"><button class="btn btn-outline" onclick="toggleAdminModal(false)">CANCEL</button><button class="btn btn-blue" onclick="authAdmin()">ENTER DESIGNER</button></div>
 </div></div>
@@ -206,12 +212,13 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
+    
     let SCHEMA = [], SECTIONS = [], CURRENT_USER_PMIS = "", isLocked = false, currentAdminPass = ""; 
 
     window.onload = async () => { await refreshSchema(); };
 
     async function refreshSchema() {
-        showLoader("Initializing System...");
+        showLoader("Synchronizing Architecture...");
         const res = await apiRequest({ action: "getSchema" });
         hideLoader();
         if(res.fields) {
@@ -248,7 +255,6 @@
             card.appendChild(grid); view.appendChild(card);
         });
 
-        // Hide login controls in User View
         document.getElementById('pmis-box').style.display = 'none';
         document.getElementById('dob-box').style.display = 'none';
         document.getElementById('loadBtn').style.display = 'none';
@@ -320,11 +326,11 @@
             <td><select class="admin-input" name="type">${["Short Text", "Paragraph", "Date", "Yes/No", "Marks", "Mobile", "Aadhaar", "PAN", "Email", "IFSC", "Select"].map(t => `<option value="${t}" ${t===f.Type?'selected':''}>${t}</option>`).join('')}</select></td>
             <td><input type="number" class="admin-input" name="maxChars" value="${f.MaxChars || ''}"></td>
             <td><select class="admin-input" name="size">${["Standard", "Medium", "Full"].map(s => `<option value="${s}" ${s===(f.Size||'Standard')?'selected':''}>${s}</option>`).join('')}</select></td>
-            <td><input type="text" class="admin-input" name="options" value="${f.Options || ''}" placeholder="Comma separated"></td>
+            <td><input type="text" class="admin-input" name="options" value="${f.Options || ''}" placeholder="CSV Options"></td>
             <td>
                 <button class="move-btn" onclick="moveRow(this, 'up')">↑</button>
                 <button class="move-btn" onclick="moveRow(this, 'down')">↓</button>
-                <button class="btn btn-danger" style="padding:4px 8px; font-size:11px" onclick="if(confirm('Delete field definition? Data remains in Sheet1.')) this.closest('tr').remove()">DEL</button>
+                <button class="btn btn-danger" style="padding:4px 8px; font-size:11px" onclick="if(confirm('Delete field?')) this.closest('tr').remove()">DEL</button>
             </td>
         `;
         setupDragEvents(tr);
@@ -359,7 +365,7 @@
         const body = document.getElementById('schemaBody');
         const tr = createAdminRow({ "Field Name": "", Label: "", Section: "", Type: "Short Text", MaxChars: "", Size: "Standard", Options: "" });
         const nameInput = tr.querySelector('input[readonly]');
-        nameInput.readOnly = false; nameInput.style.background = "#fff"; nameInput.name = "fieldName"; nameInput.placeholder = "Unique ID";
+        nameInput.readOnly = false; nameInput.style.background = "#fff"; nameInput.name = "fieldName"; nameInput.placeholder = "ID";
         body.appendChild(tr);
     }
 
@@ -385,7 +391,7 @@
         setLockedState(true); showLoader("Architecting New System...");
         const res = await apiRequest({ action: "updateConfig", configData: { fields: newFields }, authPassword: currentAdminPass, newPassword: np });
         hideLoader();
-        if(res.status === "success") { currentAdminPass = np; notify("Changes Published!"); await refreshSchema(); }
+        if(res.status === "success") { currentAdminPass = np; notify("Published!"); await refreshSchema(); }
         else notify(res.message);
         setLockedState(false);
     }
@@ -394,7 +400,7 @@
         const pmis = document.getElementById('auth_pmis').value;
         const dob = document.getElementById('auth_dob').value;
         if(pmis.length < 5 || dob.length < 10) return notify("Missing Credentials.");
-        setLockedState(true); showLoader("Fetching Records...");
+        setLockedState(true); showLoader("Verifying Identity...");
         const res = await apiRequest({ action: type, pmisCode: pmis, dob: dob });
         hideLoader();
         if(res.status === "found") { CURRENT_USER_PMIS = pmis; buildDashboard(res); notify("Data Loaded."); }
@@ -427,7 +433,6 @@
             document.getElementById('mainView').style.display = 'none'; 
             document.getElementById('adminPanelBtn').style.display = 'none'; 
             document.getElementById('exitAdminBtn').style.display = 'block'; 
-            // CLEAN SLATE FIX: Remove auth controls from Designer
             document.getElementById('headerAuth').style.display = 'none'; 
             renderAdminDashboard(); 
         } else notify("Access Denied."); 
