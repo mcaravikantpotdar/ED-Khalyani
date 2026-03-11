@@ -27,16 +27,10 @@
         .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group label { font-size: 11px; font-weight: bold; color: var(--text-light); text-transform: uppercase; }
         
-        .std-input { 
-            padding: 10px; border: 1px solid var(--border); border-radius: 4px; 
-            font-size: 14px; outline: none; background: #f1f3f4; transition: 0.2s;
-        }
+        .std-input { padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; outline: none; background: #f1f3f4; transition: 0.2s; }
         .std-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
 
-        .btn { 
-            padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer;
-            font-weight: 600; font-size: 13px; transition: 0.2s;
-        }
+        .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-blue:hover { background: var(--primary-hover); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--primary); }
@@ -44,57 +38,44 @@
         .btn-danger { background: var(--error); color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* --- DIRECTORY UI (v8.5) --- */
+        .dir-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .dir-table th { text-align: left; padding: 12px; background: #f8f9fa; color: var(--text-light); font-size: 11px; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+        .dir-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .dir-table tr:hover { background: #f1f8ff; cursor: pointer; }
+        
+        .status-pill { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .pill-full { background: #e6ffed; color: #1e8e3e; }
+        .pill-partial { background: #e8f0fe; color: #1a73e8; }
+        .pill-zero { background: #f1f3f4; color: #5f6368; }
+        
+        .search-box { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; font-size: 14px; outline: none; transition: 0.2s; }
+        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+
         /* --- CONTAINERS --- */
         .container { max-width: 1240px; margin: 20px auto; padding: 0 20px 100px; }
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 30px; margin-bottom: 40px; box-shadow: var(--shadow); }
         .card h2 { margin: 0 0 25px 0; color: var(--primary); font-size: 20px; border-left: 4px solid var(--primary); padding-left: 15px; }
 
-        /* --- FIXED LOCKDOWN GRID (3-Column Architecture) --- */
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 30px 40px; 
-            align-items: start;
-        }
-        
+        /* --- FIXED LOCKDOWN GRID --- */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px 40px; align-items: start; }
         .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
         .field label { font-size: 12px; font-weight: 600; color: var(--text-light); display: block; min-height: 18px; }
-
-        /* Size Spanning Logic (Lossless UI Alignment) */
         .field-std { grid-column: span 1; }
         .field-med { grid-column: span 2; }
         .field-full { grid-column: span 3; }
 
         .input-wrap { display: flex; align-items: center; gap: 8px; position: relative; }
-        input, select, textarea { 
-            flex: 1; padding: 12px; font-size: 15px; border: 1px solid var(--border); 
-            border-radius: 4px; background: #fff; width: 100%; outline: none;
-            text-transform: uppercase; transition: all 0.2s;
-        }
+        input, select, textarea { flex: 1; padding: 12px; font-size: 15px; border: 1px solid var(--border); border-radius: 4px; background: #fff; width: 100%; outline: none; text-transform: uppercase; transition: all 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,115,232,0.08); }
         textarea { resize: vertical; min-height: 45px; }
 
-        .pct-badge { 
-            position: absolute; right: 40px; background: var(--primary); color: white; 
-            padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; z-index: 5; display: none;
-        }
-
-        .save-btn { 
-            background: var(--success); color: white; border: none; padding: 10px 14px; 
-            border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
-            display: none; animation: pop 0.2s ease-out; white-space: nowrap;
-        }
+        .pct-badge { position: absolute; right: 40px; background: var(--primary); color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; z-index: 5; display: none; }
+        .save-btn { background: var(--success); color: white; border: none; padding: 10px 14px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; display: none; animation: pop 0.2s ease-out; white-space: nowrap; }
         @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         .sync-badge { min-width: 24px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
 
-        /* --- GLOBAL LOADING OVERLAY --- */
-        #globalLoader { 
-            position: fixed; inset: 0; background: rgba(255,255,255,0.95); 
-            backdrop-filter: blur(4px); z-index: 9999; display: none; 
-            flex-direction: column; align-items: center; justify-content: center; 
-        }
+        #globalLoader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .loader-spin { width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid var(--primary); border-radius: 50%; animation: rotate 1s linear infinite; margin-bottom: 20px; }
         .loader-text { color: var(--primary); font-weight: 600; font-size: 16px; }
 
@@ -104,27 +85,18 @@
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         th { background: #f8f9fa; text-align: left; padding: 14px; font-size: 12px; color: var(--text-light); border-bottom: 2px solid var(--border); }
         td { padding: 10px; border-bottom: 1px solid var(--border); background: #fff; }
-        
         .drag-handle { cursor: grab; color: #ccc; font-size: 20px; padding: 0 15px; text-align: center; user-select: none; }
         tr.dragging { opacity: 0.4; background: #e8f0fe !important; outline: 2px dashed var(--primary); }
         tr.drag-over { border-top: 3px solid var(--primary); }
-
         .move-btn { background: #f1f3f4; border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; cursor: pointer; }
 
-        /* MODALS & TOAST */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 450px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #202124; color: #fff; padding: 14px 28px; border-radius: 6px; font-size: 14px; display: none; z-index: 3000; }
 
         @keyframes rotate { 100% { transform: rotate(360deg); } }
-        
         @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } .field-med, .field-full { grid-column: span 2; } }
-        @media (max-width: 750px) {
-            header { flex-direction: column; align-items: stretch; }
-            .grid { grid-template-columns: 1fr; }
-            .field-std, .field-med, .field-full { grid-column: span 1; }
-            .card { padding: 20px; }
-        }
+        @media (max-width: 750px) { header { flex-direction: column; align-items: stretch; } .grid { grid-template-columns: 1fr; } .field-std, .field-med, .field-full { grid-column: span 1; } .card { padding: 20px; } }
     </style>
 </head>
 <body>
@@ -135,16 +107,9 @@
 </div>
 
 <header>
-    <!-- AUTH CONTROLS: Strictly hidden during Designer workflow to prevent state conflicts -->
     <div class="auth-controls" id="headerAuth">
-        <div class="input-group" id="pmis-box">
-            <label>PMIS CODE</label>
-            <input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits">
-        </div>
-        <div class="input-group" id="dob-box">
-            <label>D.O.B.</label>
-            <input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)">
-        </div>
+        <div class="input-group" id="pmis-box"><label>PMIS CODE</label><input type="text" id="auth_pmis" class="std-input" maxlength="5" placeholder="5 Digits"></div>
+        <div class="input-group" id="dob-box"><label>D.O.B.</label><input type="text" id="auth_dob" class="std-input" placeholder="DD-MM-YYYY" oninput="maskDate(this)"></div>
         <button class="btn btn-blue" id="loadBtn" onclick="appAction('fetchRecord')">LOAD DATA</button>
         <button class="btn btn-outline" id="regBtn" onclick="appAction('register')">REGISTER</button>
         <button class="btn btn-outline" id="logoutBtn" style="display:none" onclick="logout()">LOGOUT</button>
@@ -156,9 +121,32 @@
 </header>
 
 <div class="container" id="mainView">
-    <div style="text-align:center; padding-top: 120px; color: var(--text-light);">
-        <h3 style="font-size: 24px; color: var(--text);">PMIS Professional Management Portal</h3>
-        <p>Authenticate to access and manage your professional records.</p>
+    <div id="landingState">
+        <div style="text-align:center; padding: 60px 0; color: var(--text-light);">
+            <h3 style="font-size: 24px; color: var(--text);">PMIS Professional Management Portal</h3>
+            <p>Transparency & Progress Dashboard</p>
+        </div>
+
+        <!-- Directory Card -->
+        <div class="card" id="directorySection">
+            <h2 style="border:none; margin-bottom: 10px;">Employee Directory</h2>
+            <p style="font-size:13px; color:var(--text-light); margin-bottom:20px;">Live status of profile completion. Click a row to login.</p>
+            <input type="text" class="search-box" id="dirSearch" placeholder="Search by Name or PMIS Code..." onkeyup="filterDirectory()">
+            <div style="overflow-x: auto;">
+                <table class="dir-table">
+                    <thead>
+                        <tr>
+                            <th style="width:120px">PMIS Code</th>
+                            <th>Full Name</th>
+                            <th style="width:180px">Profile Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dirBody">
+                        <tr><td colspan="3" style="text-align:center; color:var(--text-light); padding:40px;">Initialising Directory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -169,35 +157,21 @@
             <h2 style="border:none; margin:0">Interface Designer Workspace</h2>
             <button class="btn btn-success" onclick="saveAdminChanges()">PUBLISH CHANGES</button>
         </div>
-
         <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; display:flex; gap:30px; align-items: center; margin-bottom: 25px; border: 1px solid var(--border);">
             <div class="input-group" style="flex:1"><label>Admin Master Password</label><input type="password" id="newAdminPass" class="std-input" placeholder="Update System Password" style="background:#fff"></div>
             <div style="flex:2; font-size:13px; color:var(--text-light); line-height:1.6">
-                <b>Leading Zeros:</b> Registration now forces Plain Text to preserve IDs like 00001.<br>
+                <b>Leading Zeros:</b> ID preservation active.<br>
                 <b>Box Sizes:</b> Standard (1/3), Medium (2/3), or Full Row (3/3).<br>
-                <b>Isolation:</b> Auth controls and Navigation are disabled while in Design Mode.
+                <b>Progress:</b> Dashboard calculates based on total fields in this designer.
             </div>
         </div>
-
         <div class="admin-table-wrap">
             <table id="schemaTable">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th style="width:180px">Field Name (ID)</th>
-                        <th>Display Label</th>
-                        <th>Section Group</th>
-                        <th>Data Type</th>
-                        <th style="width:80px">Max Chars</th>
-                        <th style="width:110px">Box Size</th>
-                        <th>Options (Select)</th>
-                        <th style="width:140px">Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr><th style="width:40px"></th><th style="width:180px">Field Name (ID)</th><th>Display Label</th><th>Section Group</th><th>Data Type</th><th style="width:80px">Max Chars</th><th style="width:110px">Box Size</th><th>Options</th><th style="width:140px">Actions</th></tr></thead>
                 <tbody id="schemaBody"></tbody>
             </table>
         </div>
-        <button class="btn btn-outline" style="margin-top:25px" onclick="addNewFieldRow()">+ ADD NEW FIELD DEFINITION</button>
+        <button class="btn btn-outline" style="margin-top:25px" onclick="addNewFieldRow()">+ ADD NEW FIELD</button>
     </div>
 </div>
 
@@ -212,20 +186,53 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyAChte2KM6IUkT2pWXNeDCTZpdFVjLkMSZIP65W-Q-bAWvqFBVJkHSRaHXuhFfI2XC/exec";
-    
     let SCHEMA = [], SECTIONS = [], CURRENT_USER_PMIS = "", isLocked = false, currentAdminPass = ""; 
 
-    window.onload = async () => { await refreshSchema(); };
+    window.onload = async () => { 
+        await refreshSchema();
+        fetchDirectory(); // Load landing page data immediately
+    };
 
     async function refreshSchema() {
-        showLoader("Synchronizing Architecture...");
         const res = await apiRequest({ action: "getSchema" });
-        hideLoader();
         if(res.fields) {
             SCHEMA = res.fields;
             SECTIONS = [...new Set(SCHEMA.map(f => f.Section || "UNASSIGNED"))].filter(Boolean);
             if(document.getElementById('adminView').style.display === 'block') renderAdminDashboard();
         }
+    }
+
+    async function fetchDirectory() {
+        const res = await apiRequest({ action: "getDirectory" });
+        const body = document.getElementById('dirBody');
+        if(res.directory) {
+            body.innerHTML = res.directory.map(emp => `
+                <tr onclick="selectEmployee('${emp.pmis}')">
+                    <td style="font-weight:bold; color:var(--primary)">${emp.pmis}</td>
+                    <td style="font-weight:500">${emp.name}</td>
+                    <td>
+                        <div class="status-pill ${emp.status === 100 ? 'pill-full' : (emp.status > 0 ? 'pill-partial' : 'pill-zero')}">
+                            ${emp.status}% Completed
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } else body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px;">No records found.</td></tr>';
+    }
+
+    function filterDirectory() {
+        const query = document.getElementById('dirSearch').value.toUpperCase();
+        const rows = document.querySelectorAll('#dirBody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toUpperCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        });
+    }
+
+    function selectEmployee(pmis) {
+        document.getElementById('auth_pmis').value = pmis;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('auth_dob').focus();
     }
 
     async function apiRequest(body) {
@@ -240,6 +247,8 @@
     function notify(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display='none', 3000); }
 
     function buildDashboard(userData = {}) {
+        // Clear Landing State
+        document.getElementById('landingState').style.display = 'none';
         const view = document.getElementById('mainView');
         view.innerHTML = ""; 
 
@@ -247,11 +256,7 @@
             const card = document.createElement('section');
             card.className = "card"; card.innerHTML = `<h2>${secName}</h2>`;
             const grid = document.createElement('div'); grid.className = "grid";
-
-            SCHEMA.filter(f => (f.Section || "UNASSIGNED") === secName).forEach(f => {
-                grid.appendChild(createField(f, userData[f["Field Name"]] || ""));
-            });
-
+            SCHEMA.filter(f => (f.Section || "UNASSIGNED") === secName).forEach(f => grid.appendChild(createField(f, userData[f["Field Name"]] || "")));
             card.appendChild(grid); view.appendChild(card);
         });
 
@@ -260,7 +265,6 @@
         document.getElementById('loadBtn').style.display = 'none';
         document.getElementById('regBtn').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'block';
-
         runInitialScans(userData);
     }
 
@@ -269,7 +273,6 @@
         const sizeClass = f.Size === 'Full' ? 'field-full' : (f.Size === 'Medium' ? 'field-med' : 'field-std');
         div.className = `field ${sizeClass}`;
         div.innerHTML = `<label>${f.Label || f["Field Name"]}</label>`;
-        
         const wrap = document.createElement('div'); wrap.className = "input-wrap";
         let input;
         if(f.Type === 'Yes/No' || f.Type === 'Select') {
@@ -279,18 +282,13 @@
         } else if(f.Type === 'Paragraph') {
             input = document.createElement('textarea'); input.rows = 1;
             input.onkeyup = () => { input.style.height = "auto"; input.style.height = input.scrollHeight + "px"; };
-        } else {
-            input = document.createElement('input'); input.type = "text";
-        }
-
+        } else { input = document.createElement('input'); input.type = "text"; }
         input.id = f["Field Name"]; input.value = currentVal;
         if(f.MaxChars) input.maxLength = f.MaxChars;
-
         if (f.Type === 'Marks') {
             const b = document.createElement('span'); b.className = "pct-badge"; b.id = 'pct-'+f["Field Name"];
             wrap.appendChild(b);
         }
-
         input.oninput = () => {
             const sb = wrap.querySelector('.save-btn');
             let valid = true;
@@ -301,13 +299,34 @@
             if(f.Type === 'Marks') calcPct(input.value, f["Field Name"]);
             if(f.Type === 'Yes/No') processDependencies(f, input.value === 'NO');
         };
-
         const save = document.createElement('button'); save.className = "save-btn"; save.innerText = "SAVE";
         save.onclick = () => saveField(input);
-
         const sy = document.createElement('div'); sy.className = "sync-badge";
         wrap.appendChild(input); wrap.appendChild(save); wrap.appendChild(sy);
         div.appendChild(wrap); return div;
+    }
+
+    async function saveField(el) {
+        if(isLocked) return;
+        const wrap = el.parentNode; const sb = wrap.querySelector('.save-btn'); const sy = wrap.querySelector('.sync-badge');
+        setLockedState(true); sb.style.display = "none"; sy.innerHTML = '<span class="spin">⏳</span>';
+        const res = await apiRequest({ action: "atomicUpdate", pmisCode: CURRENT_USER_PMIS, fieldName: el.id, value: el.value });
+        if(res.status === "success") { sy.innerText = "✅"; setTimeout(() => sy.innerText = "", 2500); }
+        else { sy.innerText = "❌"; sb.style.display = "block"; notify(res.message); }
+        setLockedState(false);
+    }
+
+    async function appAction(type) {
+        const pmis = document.getElementById('auth_pmis').value;
+        const dob = document.getElementById('auth_dob').value;
+        if(pmis.length < 5 || dob.length < 10) return notify("Missing Credentials.");
+        setLockedState(true); showLoader("Accessing Cloud...");
+        const res = await apiRequest({ action: type, pmisCode: pmis, dob: dob });
+        hideLoader();
+        if(res.status === "found") { CURRENT_USER_PMIS = pmis; buildDashboard(res); notify("Identity Verified."); }
+        else if(res.status === "success" && type === "register") { notify(res.message); fetchDirectory(); }
+        else notify(res.message);
+        setLockedState(false);
     }
 
     function renderAdminDashboard() {
@@ -326,7 +345,7 @@
             <td><select class="admin-input" name="type">${["Short Text", "Paragraph", "Date", "Yes/No", "Marks", "Mobile", "Aadhaar", "PAN", "Email", "IFSC", "Select"].map(t => `<option value="${t}" ${t===f.Type?'selected':''}>${t}</option>`).join('')}</select></td>
             <td><input type="number" class="admin-input" name="maxChars" value="${f.MaxChars || ''}"></td>
             <td><select class="admin-input" name="size">${["Standard", "Medium", "Full"].map(s => `<option value="${s}" ${s===(f.Size||'Standard')?'selected':''}>${s}</option>`).join('')}</select></td>
-            <td><input type="text" class="admin-input" name="options" value="${f.Options || ''}" placeholder="CSV Options"></td>
+            <td><input type="text" class="admin-input" name="options" value="${f.Options || ''}"></td>
             <td>
                 <button class="move-btn" onclick="moveRow(this, 'up')">↑</button>
                 <button class="move-btn" onclick="moveRow(this, 'down')">↓</button>
@@ -377,44 +396,14 @@
             const fieldInput = row.querySelector('input[value], input[name="fieldName"]');
             const fieldName = fieldInput.value.trim();
             if(!fieldName) return;
-            newFields.push({
-                fieldName,
-                label: row.querySelector('[name="label"]').value.trim(),
-                section: row.querySelector('[name="section"]').value.trim(),
-                type: row.querySelector('[name="type"]').value,
-                maxChars: row.querySelector('[name="maxChars"]').value,
-                size: row.querySelector('[name="size"]').value,
-                options: row.querySelector('[name="options"]').value
-            });
+            newFields.push({ fieldName, label: row.querySelector('[name="label"]').value.trim(), section: row.querySelector('[name="section"]').value.trim(), type: row.querySelector('[name="type"]').value, maxChars: row.querySelector('[name="maxChars"]').value, size: row.querySelector('[name="size"]').value, options: row.querySelector('[name="options"]').value });
         });
         const np = document.getElementById('newAdminPass').value || currentAdminPass;
-        setLockedState(true); showLoader("Architecting New System...");
+        setLockedState(true); showLoader("Architecting System...");
         const res = await apiRequest({ action: "updateConfig", configData: { fields: newFields }, authPassword: currentAdminPass, newPassword: np });
         hideLoader();
         if(res.status === "success") { currentAdminPass = np; notify("Published!"); await refreshSchema(); }
         else notify(res.message);
-        setLockedState(false);
-    }
-
-    async function appAction(type) {
-        const pmis = document.getElementById('auth_pmis').value;
-        const dob = document.getElementById('auth_dob').value;
-        if(pmis.length < 5 || dob.length < 10) return notify("Missing Credentials.");
-        setLockedState(true); showLoader("Verifying Identity...");
-        const res = await apiRequest({ action: type, pmisCode: pmis, dob: dob });
-        hideLoader();
-        if(res.status === "found") { CURRENT_USER_PMIS = pmis; buildDashboard(res); notify("Data Loaded."); }
-        else notify(res.message);
-        setLockedState(false);
-    }
-
-    async function saveField(el) {
-        if(isLocked) return;
-        const wrap = el.parentNode; const sb = wrap.querySelector('.save-btn'); const sy = wrap.querySelector('.sync-badge');
-        setLockedState(true); sb.style.display = "none"; sy.innerHTML = '<span class="spin">⏳</span>';
-        const res = await apiRequest({ action: "atomicUpdate", pmisCode: CURRENT_USER_PMIS, fieldName: el.id, value: el.value });
-        if(res.status === "success") { sy.innerText = "✅"; setTimeout(() => sy.innerText = "", 2500); }
-        else { sy.innerText = "❌"; sb.style.display = "block"; notify(res.message); }
         setLockedState(false);
     }
 
